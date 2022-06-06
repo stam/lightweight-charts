@@ -43,22 +43,22 @@ export function drawArrow(
 		ctx.lineTo(centerX + halfBaseSize, centerY - halfArrowSize);
 		ctx.lineTo(centerX - halfBaseSize, centerY - halfArrowSize);
 		ctx.lineTo(centerX - halfBaseSize, centerY);
-	}else if (direction === Direction.LEFT) {
+	} else if (direction === Direction.LEFT) {
 		ctx.moveTo(centerX, centerY - halfArrowSize);
-		ctx.lineTo(centerX - halfArrowSize,centerY);
-		ctx.lineTo(centerX,centerY + halfArrowSize);
-		ctx.lineTo( centerX, centerY + halfBaseSize);
-		ctx.lineTo(centerX + halfArrowSize,centerY + halfBaseSize);
-		ctx.lineTo( centerX + halfArrowSize,centerY - halfBaseSize);
+		ctx.lineTo(centerX - halfArrowSize, centerY);
+		ctx.lineTo(centerX, centerY + halfArrowSize);
+		ctx.lineTo(centerX, centerY + halfBaseSize);
+		ctx.lineTo(centerX + halfArrowSize, centerY + halfBaseSize);
+		ctx.lineTo(centerX + halfArrowSize, centerY - halfBaseSize);
 		ctx.lineTo(centerX, centerY - halfBaseSize);
 	} else {
 		ctx.moveTo(centerX, centerY - halfArrowSize);
-		ctx.lineTo(centerX + halfArrowSize,centerY);
+		ctx.lineTo(centerX + halfArrowSize, centerY);
 		ctx.lineTo(centerX, centerY + halfArrowSize);
 		ctx.lineTo(centerX, centerY + halfBaseSize);
-		ctx.lineTo(centerX - halfArrowSize,centerY + halfBaseSize);
-		ctx.lineTo(centerX - halfArrowSize,centerY - halfBaseSize);
-		ctx.lineTo(centerX,centerY - halfBaseSize);
+		ctx.lineTo(centerX - halfArrowSize, centerY + halfBaseSize);
+		ctx.lineTo(centerX - halfArrowSize, centerY - halfBaseSize);
+		ctx.lineTo(centerX, centerY - halfBaseSize);
 	}
 
 	ctx.fill();
