@@ -5,8 +5,15 @@ import { Coordinate } from '../model/coordinate';
 import { hitTestSquare } from './series-markers-square';
 import { shapeSize } from './series-markers-utils';
 
+export enum Direction {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+}
+
 export function drawArrow(
-	up: boolean,
+	direction: Direction,
 	ctx: CanvasRenderingContext2D,
 	centerX: Coordinate,
 	centerY: Coordinate,
@@ -18,7 +25,8 @@ export function drawArrow(
 	const halfBaseSize = (baseSize - 1) / 2;
 
 	ctx.beginPath();
-	if (up) {
+	if (direction === Direction.UP) {
+		// UP
 		ctx.moveTo(centerX - halfArrowSize, centerY);
 		ctx.lineTo(centerX, centerY - halfArrowSize);
 		ctx.lineTo(centerX + halfArrowSize, centerY);
@@ -26,7 +34,8 @@ export function drawArrow(
 		ctx.lineTo(centerX + halfBaseSize, centerY + halfArrowSize);
 		ctx.lineTo(centerX - halfBaseSize, centerY + halfArrowSize);
 		ctx.lineTo(centerX - halfBaseSize, centerY);
-	} else {
+	} else if (direction === Direction.DOWN) {
+		// DOWN
 		ctx.moveTo(centerX - halfArrowSize, centerY);
 		ctx.lineTo(centerX, centerY + halfArrowSize);
 		ctx.lineTo(centerX + halfArrowSize, centerY);
@@ -34,13 +43,28 @@ export function drawArrow(
 		ctx.lineTo(centerX + halfBaseSize, centerY - halfArrowSize);
 		ctx.lineTo(centerX - halfBaseSize, centerY - halfArrowSize);
 		ctx.lineTo(centerX - halfBaseSize, centerY);
+	}else if (direction === Direction.LEFT) {
+		ctx.moveTo(centerX, centerY - halfArrowSize);
+		ctx.lineTo(centerX - halfArrowSize,centerY);
+		ctx.lineTo(centerX,centerY + halfArrowSize);
+		ctx.lineTo( centerX, centerY + halfBaseSize);
+		ctx.lineTo(centerX + halfArrowSize,centerY + halfBaseSize);
+		ctx.lineTo( centerX + halfArrowSize,centerY - halfBaseSize);
+		ctx.lineTo(centerX, centerY - halfBaseSize);
+	} else {
+		ctx.moveTo(centerX, centerY - halfArrowSize);
+		ctx.lineTo(centerX + halfArrowSize,centerY);
+		ctx.lineTo(centerX, centerY + halfArrowSize);
+		ctx.lineTo(centerX, centerY + halfBaseSize);
+		ctx.lineTo(centerX - halfArrowSize,centerY + halfBaseSize);
+		ctx.lineTo(centerX - halfArrowSize,centerY - halfBaseSize);
+		ctx.lineTo(centerX,centerY - halfBaseSize);
 	}
 
 	ctx.fill();
 }
 
 export function hitTestArrow(
-	up: boolean,
 	centerX: Coordinate,
 	centerY: Coordinate,
 	size: number,

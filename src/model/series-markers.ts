@@ -1,12 +1,12 @@
 /**
  * Represents the position of a series marker relative to a bar.
  */
-export type SeriesMarkerPosition = 'aboveBar' | 'belowBar' | 'inBar';
+export type SeriesMarkerPosition = 'aboveBar' | 'belowBar' | 'inBar' | number;
 
 /**
  * Represents the shape of a series marker.
  */
-export type SeriesMarkerShape = 'circle' | 'square' | 'arrowUp' | 'arrowDown';
+export type SeriesMarkerShape = 'circle' | 'square' | 'arrowUp' | 'arrowDown' | 'arrowLeft' | 'arrowRight';
 
 /**
  * Represents a series marker.
