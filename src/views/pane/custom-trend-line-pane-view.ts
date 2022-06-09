@@ -1,11 +1,9 @@
 import { CustomTrendLine } from '../../model/custom-trend-line';
 import { Series } from '../../model/series';
 
-import { SeriesHorizontalLinePaneView } from './series-horizontal-line-pane-view';
+import { SeriesTrendLinePaneView } from './series-trend-line-pane-view';
 
-
-// TODO: use proper trendLineRenderer
-export class CustomTrendLinePaneView extends SeriesHorizontalLinePaneView {
+export class CustomTrendLinePaneView extends SeriesTrendLinePaneView {
 	private readonly _trendLine: CustomTrendLine;
 
 	public constructor(series: Series, priceLine: CustomTrendLine) {
@@ -23,13 +21,17 @@ export class CustomTrendLinePaneView extends SeriesHorizontalLinePaneView {
 			return;
 		}
 
-		const y = this._trendLine.yCoord();
-		if (y === null) {
+		const coords = this._trendLine.getCoords();
+		if (!coords) {
 			return;
 		}
+		const { xStart, xEnd, yStart, yEnd } = coords;
 
 		data.visible = true;
-		data.y = y;
+		data.xStart = xStart;
+		data.xEnd = xEnd;
+		data.yStart = yStart;
+		data.yEnd = yEnd;
 		data.color = lineOptions.color;
 		data.width = width;
 		data.height = height;

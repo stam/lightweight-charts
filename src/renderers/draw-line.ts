@@ -74,7 +74,7 @@ export function setLineStyle(ctx: CanvasRenderingContext2D, style: LineStyle): v
 
 export function drawHorizontalLine(ctx: CanvasRenderingContext2D, y: number, left: number, right: number): void {
 	ctx.beginPath();
-	const correction = (ctx.lineWidth % 2) ? 0.5 : 0;
+	const correction = ctx.lineWidth % 2 ? 0.5 : 0;
 	ctx.moveTo(left, y + correction);
 	ctx.lineTo(right, y + correction);
 	ctx.stroke();
@@ -82,9 +82,17 @@ export function drawHorizontalLine(ctx: CanvasRenderingContext2D, y: number, lef
 
 export function drawVerticalLine(ctx: CanvasRenderingContext2D, x: number, top: number, bottom: number): void {
 	ctx.beginPath();
-	const correction = (ctx.lineWidth % 2) ? 0.5 : 0;
+	const correction = ctx.lineWidth % 2 ? 0.5 : 0;
 	ctx.moveTo(x + correction, top);
 	ctx.lineTo(x + correction, bottom);
+	ctx.stroke();
+}
+
+export function drawDiagonalLine(ctx: CanvasRenderingContext2D, xStart: number, xEnd: number, yStart: number, yEnd: number): void {
+	ctx.beginPath();
+	const correction = ctx.lineWidth % 2 ? 0.5 : 0;
+	ctx.moveTo(xStart + correction, yStart + correction);
+	ctx.lineTo(xEnd + correction, yEnd + correction);
 	ctx.stroke();
 }
 

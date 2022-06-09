@@ -11,6 +11,13 @@ import { Series } from './series';
 import { TimePoint } from './time-data';
 import { TrendLineOptions } from './trend-line-options';
 
+interface CoordinateToAndFrom {
+	xStart: Coordinate;
+	xEnd: Coordinate;
+	yStart: Coordinate;
+	yEnd: Coordinate;
+}
+
 export class CustomTrendLine {
 	private readonly _series: Series;
 	private readonly _trendLineView: CustomTrendLinePaneView;
@@ -52,7 +59,7 @@ export class CustomTrendLine {
 		// this._priceAxisView.update();
 	}
 
-	public yCoord(): Coordinate | null {
+	public getCoords(): CoordinateToAndFrom | null {
 		const series = this._series;
 		const priceScale = series.priceScale();
 		const timeScale = series.model().timeScale();
@@ -66,6 +73,19 @@ export class CustomTrendLine {
 			return null;
 		}
 
-		return priceScale.priceToCoordinate(this._options.startPrice, firstValue.value);
+		const yStart = priceScale.priceToCoordinate(this._options.startPrice, firstValue.value);
+		const yEnd = priceScale.priceToCoordinate(this._options.endPrice, firstValue.value);
+
+		const timePointIndexStart = timeScale.timeToIndex(this._options.startTime, true);
+		const timePointIndexEnd = timeScale.timeToIndex(this._options.endTime, true);
+
+		if (!timePointIndexStart || !timePointIndexEnd) {
+			return null;
+		}
+
+		const xStart = timeScale.indexToCoordinate(timePointIndexStart);
+		const xEnd = timeScale.indexToCoordinate(timePointIndexEnd);
+
+		return { xStart, xEnd, yStart, yEnd };
 	}
 }

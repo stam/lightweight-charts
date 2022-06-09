@@ -36,10 +36,7 @@ export class CustomPriceLine {
 	}
 
 	public paneViews(): readonly IPaneView[] {
-		return [
-			this._priceLineView,
-			this._panePriceAxisView,
-		];
+		return [this._priceLineView, this._panePriceAxisView];
 	}
 
 	public priceAxisView(): IPriceAxisView {

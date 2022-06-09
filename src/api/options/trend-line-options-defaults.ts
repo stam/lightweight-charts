@@ -9,7 +9,7 @@ export const trendLineOptionsDefaults: TrendLineOptions<Time> = {
 	endPrice: 0,
 	startTime: '2022-01-01',
 	endTime: '2022-04-01',
-	lineStyle: LineStyle.Dashed,
+	lineStyle: LineStyle.Solid,
 	lineWidth: 1,
 	lineVisible: true,
 	axisLabelVisible: true,

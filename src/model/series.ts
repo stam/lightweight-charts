@@ -445,6 +445,9 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 		for (const customPriceLine of this._customPriceLines) {
 			customPriceLine.update();
 		}
+		for (const customTrendLine of this._customTrendLines) {
+			customTrendLine.update();
+		}
 
 		this._priceLineView.update();
 		this._baseHorizontalLineView.update();
