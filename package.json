@@ -92,7 +92,6 @@
     "bundle-dts": "tsc --noEmit --allowJs dts-config.js && dts-bundle-generator --config dts-config.js",
     "tsc": "ttsc -p tsconfig.prod.json",
     "tsc-watch": "npm run tsc -- --watch --preserveWatchOutput",
-    "tsc-verify": "tsc -b tsconfig.composite.json",
     "lint": "npm-run-all -p lint:**",
     "lint:eslint": "eslint --format=unix ./",
     "lint:md": "./node_modules/.bin/markdownlint -i \"**/node_modules/**\" -i \"**/website/docs/api/**\" -i \"**/website/versioned_docs/**/api/**\" \"**/*.md\"",
@@ -106,7 +105,6 @@
     "build:release": "cross-env BUILD_TAG=release npm run build:prod",
     "prepare-release": "npm-run-all clean build:release && node ./scripts/clean-package-json.js",
     "size-limit": "size-limit",
-    "verify": "npm-run-all clean -p lint check-markdown-links build:prod -p check-dts-docs tsc-verify test size-limit",
     "test": "mocha tests/unittests/**/*.spec.ts"
   }
 }

@@ -4,16 +4,14 @@ import { BarPrice } from '../model/bar';
 import { Coordinate } from '../model/coordinate';
 import { PriceLineOptions } from '../model/price-line-options';
 import { SeriesMarker } from '../model/series-markers';
-import {
-	SeriesOptionsMap,
-	SeriesPartialOptionsMap,
-	SeriesType,
-} from '../model/series-options';
+import { SeriesOptionsMap, SeriesPartialOptionsMap, SeriesType } from '../model/series-options';
 import { Range } from '../model/time-data';
+import { TrendLineOptions } from '../model/trend-line-options';
 
 import { SeriesDataItemTypeMap, Time } from './data-consumer';
 import { IPriceLine } from './iprice-line';
 import { IPriceScaleApi } from './iprice-scale-api';
+import { ITrendLine } from './itrend-line';
 
 /**
  * Represents a range of bars and the number of bars outside the range.
@@ -229,6 +227,39 @@ export interface ISeriesApi<TSeriesType extends SeriesType> {
 	 * ```
 	 */
 	removePriceLine(line: IPriceLine): void;
+
+	/**
+	 * Creates a new trend line
+	 *
+	 * @param options - Any subset of options.
+	 * @example
+	 * ```js
+	 * const trendLine = series.createTrendLine({
+	 *     startPrice: 80,
+	 *     endPrice: 100,
+	 *     startTime: '2022-01-01',
+	 *     endTime: '2022-01-25',
+	 *     color: 'red',
+	 *     lineWidth: 3,
+	 *     lineStyle: LightweightCharts.LineStyle.Dashed,
+	 *     axisLabelVisible: false,
+	 *     title: 'Support',
+	 * });
+	 * ```
+	 */
+	createTrendLine(options: TrendLineOptions<Time>): ITrendLine;
+
+	/**
+	 * Removes the trendLine line that was created before.
+	 *
+	 * @param line - A line to remove.
+	 * @example
+	 * ```js
+	 * const trendLine = series.createTrendLine({ startPrice: 80.0 });
+	 * series.removeTrendLine(trendLine);
+	 * ```
+	 */
+	removeTrendLine(line: ITrendLine): void;
 
 	/**
 	 * Return current series type.

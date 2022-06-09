@@ -10,13 +10,10 @@ import { PriceLineOptions } from '../model/price-line-options';
 import { RangeImpl } from '../model/range-impl';
 import { Series, SeriesPartialOptionsInternal } from '../model/series';
 import { SeriesMarker } from '../model/series-markers';
-import {
-	SeriesOptionsMap,
-	SeriesPartialOptionsMap,
-	SeriesType,
-} from '../model/series-options';
+import { SeriesOptionsMap, SeriesPartialOptionsMap, SeriesType } from '../model/series-options';
 import { Logical, Range, TimePoint, TimePointIndex } from '../model/time-data';
 import { TimeScaleVisibleRange } from '../model/time-scale-visible-range';
+import { TrendLineOptions } from '../model/trend-line-options';
 
 import { IPriceScaleApiProvider } from './chart-api';
 import { DataUpdatesConsumer, SeriesDataItemTypeMap, Time } from './data-consumer';
@@ -25,10 +22,15 @@ import { checkItemsAreOrdered, checkPriceLineOptions, checkSeriesValuesType } fr
 import { IPriceLine } from './iprice-line';
 import { IPriceScaleApi } from './iprice-scale-api';
 import { BarsInfo, ISeriesApi } from './iseries-api';
+import { ITrendLine } from './itrend-line';
 import { priceLineOptionsDefaults } from './options/price-line-options-defaults';
+import { trendLineOptionsDefaults } from './options/trend-line-options-defaults';
 import { PriceLine } from './price-line-api';
+import { TrendLine } from './trend-line-api';
 
-export function migrateOptions<TSeriesType extends SeriesType>(options: SeriesPartialOptionsMap[TSeriesType]): SeriesPartialOptionsInternal<TSeriesType> {
+export function migrateOptions<TSeriesType extends SeriesType>(
+	options: SeriesPartialOptionsMap[TSeriesType]
+): SeriesPartialOptionsInternal<TSeriesType> {
 	// eslint-disable-next-line deprecation/deprecation
 	const { overlay, ...res } = options;
 	if (overlay) {
@@ -43,7 +45,11 @@ export class SeriesApi<TSeriesType extends SeriesType> implements ISeriesApi<TSe
 
 	private readonly _priceScaleApiProvider: IPriceScaleApiProvider;
 
-	public constructor(series: Series<TSeriesType>, dataUpdatesConsumer: DataUpdatesConsumer<TSeriesType>, priceScaleApiProvider: IPriceScaleApiProvider) {
+	public constructor(
+		series: Series<TSeriesType>,
+		dataUpdatesConsumer: DataUpdatesConsumer<TSeriesType>,
+		priceScaleApiProvider: IPriceScaleApiProvider
+	) {
 		this._series = series;
 		this._dataUpdatesConsumer = dataUpdatesConsumer;
 		this._priceScaleApiProvider = priceScaleApiProvider;
@@ -103,13 +109,13 @@ export class SeriesApi<TSeriesType extends SeriesType> implements ISeriesApi<TSe
 			};
 		}
 
-		const barsBefore = (dataFirstBarInRange === null || dataFirstBarInRange.index === dataFirstIndex)
-			? range.from - dataFirstIndex
-			: dataFirstBarInRange.index - dataFirstIndex;
+		const barsBefore =
+			dataFirstBarInRange === null || dataFirstBarInRange.index === dataFirstIndex
+				? range.from - dataFirstIndex
+				: dataFirstBarInRange.index - dataFirstIndex;
 
-		const barsAfter = (dataLastBarInRange === null || dataLastBarInRange.index === dataLastIndex)
-			? dataLastIndex - range.to
-			: dataLastIndex - dataLastBarInRange.index;
+		const barsAfter =
+			dataLastBarInRange === null || dataLastBarInRange.index === dataLastIndex ? dataLastIndex - range.to : dataLastIndex - dataLastBarInRange.index;
 
 		const result: BarsInfo = { barsBefore, barsAfter };
 
@@ -168,6 +174,24 @@ export class SeriesApi<TSeriesType extends SeriesType> implements ISeriesApi<TSe
 
 	public removePriceLine(line: IPriceLine): void {
 		this._series.removePriceLine((line as PriceLine).priceLine());
+	}
+
+	public createTrendLine(options: TrendLineOptions<Time>): ITrendLine {
+		const { startTime, endTime, ...cloneableOptions } = options;
+		const strictOptions = merge(clone(trendLineOptionsDefaults), cloneableOptions) as TrendLineOptions<Time>;
+
+		const convertedOptions: TrendLineOptions<TimePoint> = {
+			...strictOptions,
+			startTime: convertTime(startTime),
+			endTime: convertTime(endTime),
+		};
+
+		const trendLine = this._series.createTrendLine(convertedOptions);
+		return new TrendLine(trendLine);
+	}
+
+	public removeTrendLine(line: ITrendLine): void {
+		this._series.removeTrendLine((line as TrendLine).trendLine());
 	}
 
 	public seriesType(): TSeriesType {
