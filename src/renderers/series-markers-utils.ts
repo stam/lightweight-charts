@@ -15,6 +15,8 @@ function size(barSpacing: number, coeff: number): number {
 
 export function shapeSize(shape: SeriesMarkerShape, originalSize: number): number {
 	switch (shape) {
+		case 'arrowLeft':
+		case 'arrowRight':
 		case 'arrowDown':
 		case 'arrowUp':
 			return size(originalSize, 1);

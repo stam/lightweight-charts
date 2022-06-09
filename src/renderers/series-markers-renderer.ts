@@ -8,7 +8,7 @@ import { TextWidthCache } from '../model/text-width-cache';
 import { SeriesItemsIndexesRange, TimedValue } from '../model/time-data';
 
 import { ScaledRenderer } from './scaled-renderer';
-import { drawArrow, hitTestArrow } from './series-markers-arrow';
+import { Direction, drawArrow, hitTestArrow } from './series-markers-arrow';
 import { drawCircle, hitTestCircle } from './series-markers-circle';
 import { drawSquare, hitTestSquare } from './series-markers-square';
 import { drawText, hitTestText } from './series-markers-text';
@@ -108,11 +108,17 @@ function drawShape(item: SeriesMarkerRendererDataItem, ctx: CanvasRenderingConte
 	}
 
 	switch (item.shape) {
-		case 'arrowDown':
-			drawArrow(false, ctx, item.x, item.y, item.size);
-			return;
 		case 'arrowUp':
-			drawArrow(true, ctx, item.x, item.y, item.size);
+			drawArrow(Direction.UP, ctx, item.x, item.y, item.size);
+			return;
+		case 'arrowDown':
+			drawArrow(Direction.DOWN, ctx, item.x, item.y, item.size);
+			return;
+		case 'arrowLeft':
+			drawArrow(Direction.LEFT, ctx, item.x, item.y, item.size);
+			return;
+		case 'arrowRight':
+			drawArrow(Direction.RIGHT, ctx, item.x, item.y, item.size);
 			return;
 		case 'circle':
 			drawCircle(ctx, item.x, item.y, item.size);
@@ -139,10 +145,11 @@ function hitTestShape(item: SeriesMarkerRendererDataItem, x: Coordinate, y: Coor
 	}
 
 	switch (item.shape) {
-		case 'arrowDown':
-			return hitTestArrow(true, item.x, item.y, item.size, x, y);
 		case 'arrowUp':
-			return hitTestArrow(false, item.x, item.y, item.size, x, y);
+		case 'arrowDown':
+		case 'arrowLeft':
+		case 'arrowRight':
+			return hitTestArrow(item.x, item.y, item.size, x, y);
 		case 'circle':
 			return hitTestCircle(item.x, item.y, item.size, x, y);
 		case 'square':
