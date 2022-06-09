@@ -177,13 +177,12 @@ export class SeriesApi<TSeriesType extends SeriesType> implements ISeriesApi<TSe
 	}
 
 	public createTrendLine(options: TrendLineOptions<Time>): ITrendLine {
-		const { startTime, endTime, ...cloneableOptions } = options;
-		const strictOptions = merge(clone(trendLineOptionsDefaults), cloneableOptions) as TrendLineOptions<Time>;
+		const strictOptions = merge(clone(trendLineOptionsDefaults), options) as TrendLineOptions<Time>;
 
 		const convertedOptions: TrendLineOptions<TimePoint> = {
 			...strictOptions,
-			startTime: convertTime(startTime),
-			endTime: convertTime(endTime),
+			startTime: convertTime(strictOptions.startTime),
+			endTime: convertTime(strictOptions.endTime),
 		};
 
 		const trendLine = this._series.createTrendLine(convertedOptions);
