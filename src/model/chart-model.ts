@@ -115,12 +115,10 @@ export interface KineticScrollOptions {
 	mouse: boolean;
 }
 
-type HandleScaleOptionsInternal =
-	Omit<HandleScaleOptions, 'axisPressedMouseMove'>
-	& {
-		/** @public */
-		axisPressedMouseMove: AxisPressedMouseMoveOptions;
-	};
+type HandleScaleOptionsInternal = Omit<HandleScaleOptions, 'axisPressedMouseMove'> & {
+	/** @public */
+	axisPressedMouseMove: AxisPressedMouseMoveOptions;
+};
 
 /**
  * Represents options for how the time and price axes react to mouse movements.
@@ -144,6 +142,7 @@ export interface AxisPressedMouseMoveOptions {
 export interface HoveredObject {
 	hitTestData?: unknown;
 	externalId?: string;
+	interactive?: boolean;
 }
 
 export interface HoveredSource {
@@ -302,19 +301,16 @@ export interface ChartOptions {
 	/** @inheritDoc TrackingModeOptions
 	 */
 	trackingMode: TrackingModeOptions;
-
 }
 
-export type ChartOptionsInternal =
-	Omit<ChartOptions, 'handleScroll' | 'handleScale' | 'priceScale' | 'layout'>
-	& {
-		/** @public */
-		handleScroll: HandleScrollOptions;
-		/** @public */
-		handleScale: HandleScaleOptionsInternal;
-		/** @public */
-		layout: LayoutOptionsInternal;
-	};
+export type ChartOptionsInternal = Omit<ChartOptions, 'handleScroll' | 'handleScale' | 'priceScale' | 'layout'> & {
+	/** @public */
+	handleScroll: HandleScrollOptions;
+	/** @public */
+	handleScale: HandleScaleOptionsInternal;
+	/** @public */
+	layout: LayoutOptionsInternal;
+};
 
 interface GradientColorsCache {
 	topColor: string;
@@ -388,6 +384,7 @@ export class ChartModel implements IDestroyable {
 	public setHoveredSource(source: HoveredSource | null): void {
 		const prevSource = this._hoveredSource;
 		this._hoveredSource = source;
+
 		if (prevSource !== null) {
 			this.updateSource(prevSource.source);
 		}
@@ -505,7 +502,7 @@ export class ChartModel implements IDestroyable {
 			this._panes.push(pane);
 		}
 
-		const actualIndex = (index === undefined) ? this._panes.length - 1 : index;
+		const actualIndex = index === undefined ? this._panes.length - 1 : index;
 
 		// we always do autoscaling on the creation
 		// if autoscale option is true, it is ok, just recalculate by invalidation mask
@@ -785,7 +782,7 @@ export class ChartModel implements IDestroyable {
 		} else {
 			// if move to the new scale of the same pane, keep zorder
 			// if move to new pane
-			const zOrder = (target.pane === pane) ? series.zorder() : undefined;
+			const zOrder = target.pane === pane ? series.zorder() : undefined;
 			target.pane.addDataSource(series, targetScaleId, zOrder);
 		}
 	}
@@ -846,8 +843,11 @@ export class ChartModel implements IDestroyable {
 		// percent should be from 0 to 100 (we're using only integer values to make cache more efficient)
 		percent = Math.max(0, Math.min(100, Math.round(percent * 100)));
 
-		if (this._gradientColorsCache === null ||
-			this._gradientColorsCache.topColor !== topColor || this._gradientColorsCache.bottomColor !== bottomColor) {
+		if (
+			this._gradientColorsCache === null ||
+			this._gradientColorsCache.topColor !== topColor ||
+			this._gradientColorsCache.bottomColor !== bottomColor
+		) {
 			this._gradientColorsCache = {
 				topColor: topColor,
 				bottomColor: bottomColor,
@@ -910,9 +910,7 @@ export class ChartModel implements IDestroyable {
 		const layoutOptions = this._options.layout;
 
 		if (layoutOptions.background.type === ColorType.VerticalGradient) {
-			return side === BackgroundColorSide.Top ?
-				layoutOptions.background.topColor :
-				layoutOptions.background.bottomColor;
+			return side === BackgroundColorSide.Top ? layoutOptions.background.topColor : layoutOptions.background.bottomColor;
 		}
 
 		return layoutOptions.background.color;

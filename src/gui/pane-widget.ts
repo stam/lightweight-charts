@@ -20,7 +20,14 @@ import { IPaneView } from '../views/pane/ipane-view';
 import { createBoundCanvas, getContext2D, Size } from './canvas-utils';
 import { ChartWidget } from './chart-widget';
 import { KineticAnimation } from './kinetic-animation';
-import { MouseEventHandler, MouseEventHandlerMouseEvent, MouseEventHandlers, MouseEventHandlerTouchEvent, Position, TouchMouseEvent } from './mouse-event-handler';
+import {
+	MouseEventHandler,
+	MouseEventHandlerMouseEvent,
+	MouseEventHandlers,
+	MouseEventHandlerTouchEvent,
+	Position,
+	TouchMouseEvent,
+} from './mouse-event-handler';
 import { PriceAxisWidget, PriceAxisWidgetSide } from './price-axis-widget';
 
 const enum Constants {
@@ -28,6 +35,11 @@ const enum Constants {
 	MaxScrollSpeed = 7,
 	DumpingCoeff = 0.997,
 	ScrollMinMove = 15,
+}
+
+const enum CursorType {
+	Default,
+	Pointer,
 }
 
 type DrawFunction = (renderer: IPaneRenderer, ctx: CanvasRenderingContext2D, pixelRatio: number, isHovered: boolean, hitTestData?: unknown) => void;
@@ -92,6 +104,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	private _initCrosshairPosition: Point | null = null;
 	private _scrollXAnimation: KineticAnimation | null = null;
 	private _isSettingSize: boolean = false;
+	private _hoveredInteractiveObject: HoveredObject | null = null;
 
 	public constructor(chart: ChartWidget, state: Pane) {
 		this._chart = chart;
@@ -139,14 +152,10 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		this._rowElement.appendChild(this._rightAxisCell);
 		this.updatePriceAxisWidgetsStates();
 
-		this._mouseEventHandler = new MouseEventHandler(
-			this._topCanvasBinding.canvas,
-			this,
-			{
-				treatVertTouchDragAsPageScroll: () => this._startTrackPoint === null && !this._chart.options().handleScroll.vertTouchDrag,
-				treatHorzTouchDragAsPageScroll: () => this._startTrackPoint === null && !this._chart.options().handleScroll.horzTouchDrag,
-			}
-		);
+		this._mouseEventHandler = new MouseEventHandler(this._topCanvasBinding.canvas, this, {
+			treatVertTouchDragAsPageScroll: () => this._startTrackPoint === null && !this._chart.options().handleScroll.vertTouchDrag,
+			treatHorzTouchDragAsPageScroll: () => this._startTrackPoint === null && !this._chart.options().handleScroll.horzTouchDrag,
+		});
 	}
 
 	public destroy(): void {
@@ -264,6 +273,13 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		this._setCrosshairPosition(x, y);
 		const hitTest = this.hitTest(x, y);
+
+		// TODO: also check iff drawing mode
+		if (hitTest && hitTest.object?.interactive) {
+			this._hoveredInteractiveObject = hitTest.object;
+		} else {
+			this._hoveredInteractiveObject = null;
+		}
 		this._model().setHoveredSource(hitTest && { source: hitTest.source, object: hitTest.object });
 	}
 
@@ -362,8 +378,8 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			// tracking mode: move crosshair
 			this._exitTrackingModeOnNextTry = false;
 			const origPoint = ensureNotNull(this._initCrosshairPosition);
-			const newX = origPoint.x + (x - this._startTrackPoint.x) as Coordinate;
-			const newY = origPoint.y + (y - this._startTrackPoint.y) as Coordinate;
+			const newX = (origPoint.x + (x - this._startTrackPoint.x)) as Coordinate;
+			const newY = (origPoint.y + (y - this._startTrackPoint.y)) as Coordinate;
 			this._setCrosshairPosition(newX, newY);
 			return;
 		}
@@ -450,6 +466,10 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		return this._canvasBinding.canvas;
 	}
 
+	private _setCursor(type: CursorType): void {
+		this._topCanvasBinding.canvas.style.cursor = type === CursorType.Pointer ? 'pointer' : 'default';
+	}
+
 	public paint(type: InvalidationLevel): void {
 		if (type === InvalidationLevel.None) {
 			return;
@@ -468,6 +488,12 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		}
 		if (this._rightPriceAxisWidget !== null) {
 			this._rightPriceAxisWidget.paint(type);
+		}
+
+		if (this._hoveredInteractiveObject) {
+			this._setCursor(CursorType.Pointer);
+		} else {
+			this._setCursor(CursorType.Default);
 		}
 
 		if (type !== InvalidationLevel.Cursor) {
@@ -566,9 +592,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const width = state.width();
 		const hoveredSource = state.model().hoveredSource();
 		const isHovered = hoveredSource !== null && hoveredSource.source === source;
-		const objecId = hoveredSource !== null && isHovered && hoveredSource.object !== undefined
-			? hoveredSource.object.hitTestData
-			: undefined;
+		const objecId = hoveredSource !== null && isHovered && hoveredSource.object !== undefined ? hoveredSource.object.hitTestData : undefined;
 
 		for (const paneView of paneViews) {
 			const renderer = paneView.renderer(height, width);
@@ -626,7 +650,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	}
 
 	private _preventScroll(event: TouchMouseEvent): boolean {
-		return event.isTouch && this._longTap || this._startTrackPoint !== null;
+		return (event.isTouch && this._longTap) || this._startTrackPoint !== null;
 	}
 
 	private _correctXCoord(x: Coordinate): Coordinate {
@@ -686,7 +710,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			this._scrollXAnimation.start(event.localX, startAnimationTime);
 		}
 
-		if ((this._scrollXAnimation === null || this._scrollXAnimation.finished(startAnimationTime))) {
+		if (this._scrollXAnimation === null || this._scrollXAnimation.finished(startAnimationTime)) {
 			// animation is not needed
 			this._finishScroll();
 			return;
@@ -698,7 +722,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const scrollXAnimation = this._scrollXAnimation;
 
 		const animationFn = () => {
-			if ((scrollXAnimation.terminated())) {
+			if (scrollXAnimation.terminated()) {
 				// animation terminated, see _terminateKineticAnimation
 				return;
 			}
@@ -770,10 +794,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const chartOptions = this._chart.options();
 		const scrollOptions = chartOptions.handleScroll;
 		const kineticScrollOptions = chartOptions.kineticScroll;
-		if (
-			(!scrollOptions.pressedMouseMove || event.isTouch) &&
-			(!scrollOptions.horzTouchDrag && !scrollOptions.vertTouchDrag || !event.isTouch)
-		) {
+		if ((!scrollOptions.pressedMouseMove || event.isTouch) && ((!scrollOptions.horzTouchDrag && !scrollOptions.vertTouchDrag) || !event.isTouch)) {
 			return;
 		}
 
@@ -800,12 +821,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			!this._isScrolling &&
 			(this._startScrollingPos.x !== event.clientX || this._startScrollingPos.y !== event.clientY)
 		) {
-			if (
-				this._scrollXAnimation === null && (
-					event.isTouch && kineticScrollOptions.touch ||
-					!event.isTouch && kineticScrollOptions.mouse
-				)
-			) {
+			if (this._scrollXAnimation === null && ((event.isTouch && kineticScrollOptions.touch) || (!event.isTouch && kineticScrollOptions.mouse))) {
 				this._scrollXAnimation = new KineticAnimation(
 					Constants.MinScrollSpeed,
 					Constants.MaxScrollSpeed,
