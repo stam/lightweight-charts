@@ -6,7 +6,7 @@ import { Delegate } from '../helpers/delegate';
 import { IDestroyable } from '../helpers/idestroyable';
 import { ISubscription } from '../helpers/isubscription';
 
-import { ChartModel, HoveredObject, TrackingModeExitMode } from '../model/chart-model';
+import { ChartModel, HoveredObject, InteractiveHitTestData, TrackingModeExitMode } from '../model/chart-model';
 import { Coordinate } from '../model/coordinate';
 import { IDataSource } from '../model/idata-source';
 import { InvalidationLevel } from '../model/invalidate-mask';
@@ -700,6 +700,11 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	}
 
 	private _endScroll(event: TouchMouseEvent): void {
+		if (this._model().isDragging()) {
+			this._model().stopDraggingObject();
+			return;
+		}
+
 		if (!this._isScrolling) {
 			return;
 		}
@@ -795,6 +800,18 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const scrollOptions = chartOptions.handleScroll;
 		const kineticScrollOptions = chartOptions.kineticScroll;
 		if ((!scrollOptions.pressedMouseMove || event.isTouch) && ((!scrollOptions.horzTouchDrag && !scrollOptions.vertTouchDrag) || !event.isTouch)) {
+			return;
+		}
+
+		if (!model.isDragging() && this._hoveredInteractiveObject?.interactive) {
+			const hoveredObject = this._hoveredInteractiveObject as HoveredObject<InteractiveHitTestData>;
+			if (hoveredObject.hitTestData?.isDragHandle) {
+				model.startDraggingObject();
+			}
+		}
+
+		if (model.isDragging()) {
+			model.dragObjectTo(this._state, event.localX, event.localY);
 			return;
 		}
 

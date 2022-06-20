@@ -1,8 +1,10 @@
-import { HoveredObject } from '../model/chart-model';
+import { HoveredObject, InteractiveHitTestData } from '../model/chart-model';
 import { Coordinate } from '../model/coordinate';
+import { drawDragHandle } from './drag-handle';
 
 import { drawDiagonalLine, LineStyle, LineWidth, setLineStyle } from './draw-line';
 import { IPaneRenderer } from './ipane-renderer';
+import { hitTestCircle } from './series-markers-circle';
 
 export interface TrendLineRendererData {
 	color: string;
@@ -18,6 +20,8 @@ export interface TrendLineRendererData {
 	height: number;
 	visible?: boolean;
 }
+
+const DRAG_HANDLE_SIZE = 20;
 
 export class TrendLineRenderer implements IPaneRenderer {
 	private _data: TrendLineRendererData | null = null;
@@ -45,11 +49,35 @@ export class TrendLineRenderer implements IPaneRenderer {
 		ctx.lineWidth = Math.floor(this._data.lineWidth * pixelRatio);
 		setLineStyle(ctx, this._data.lineStyle);
 		drawDiagonalLine(ctx, xStart, xEnd, yStart, yEnd);
+
+		if (isHovered) {
+			drawDragHandle(ctx, this._data.xStart, this._data.yStart, DRAG_HANDLE_SIZE);
+			drawDragHandle(ctx, this._data.xEnd, this._data.yEnd, DRAG_HANDLE_SIZE);
+		}
 	}
 
 	public hitTest(x: Coordinate, y: Coordinate): HoveredObject | null {
 		if (this._data === null) {
 			return null;
+		}
+
+		const hitTestResponse: InteractiveHitTestData = {
+			isDragHandle: false,
+		};
+		const response = {
+			hitTestData: hitTestResponse,
+			externalId: '420',
+			interactive: true,
+		};
+
+		// Drag handles
+		if (hitTestCircle(this._data.xStart, this._data.yStart, 20, x, y)) {
+			response.hitTestData.isDragHandle = 'start';
+			return response;
+		}
+		if (hitTestCircle(this._data.xEnd, this._data.yEnd, 20, x, y)) {
+			response.hitTestData.isDragHandle = 'end';
+			return response;
 		}
 
 		const nonRetardedSortFunction = (a: number, b: number) => a - b;
@@ -73,11 +101,7 @@ export class TrendLineRenderer implements IPaneRenderer {
 
 		// TODO: proper internal and external IDs
 		if (targetYWithinBounds) {
-			return {
-				hitTestData: 69,
-				externalId: '420',
-				interactive: true,
-			};
+			return response;
 		}
 		return null;
 	}

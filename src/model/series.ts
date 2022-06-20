@@ -305,6 +305,36 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 		this.model().updateSource(this);
 	}
 
+	public changeTrendLine(id: string, x: number, y: number, handleType: 'start' | 'end') {
+		const trendLine = this._customTrendLines[0];
+
+		const priceScale = this.priceScale();
+		const timeScale = this.model().timeScale();
+
+		if (timeScale.isEmpty() || priceScale.isEmpty()) {
+			return;
+		}
+
+		const time = timeScale.indexToTime(timeScale.coordinateToIndex(x as Coordinate));
+		const price = priceScale.coordinateToPrice(y as Coordinate, priceScale.firstValue() as number);
+
+		if (!time) {
+			return;
+		}
+
+		if (handleType === 'start') {
+			trendLine.applyOptions({
+				startPrice: price,
+				startTime: time,
+			});
+		} else if (handleType === 'end') {
+			trendLine.applyOptions({
+				endPrice: price,
+				endTime: time,
+			});
+		}
+	}
+
 	public createTrendLine(options: TrendLineOptions<TimePoint>): CustomTrendLine {
 		const result = new CustomTrendLine(this, options);
 		this._customTrendLines.push(result);

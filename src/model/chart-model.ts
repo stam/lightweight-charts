@@ -139,16 +139,22 @@ export interface AxisPressedMouseMoveOptions {
 	price: boolean;
 }
 
-export interface HoveredObject {
-	hitTestData?: unknown;
+export interface HoveredObject<T = unknown> {
+	hitTestData?: T;
 	externalId?: string;
 	interactive?: boolean;
+}
+
+export interface InteractiveHitTestData {
+	isDragHandle: 'start' | 'end' | false;
 }
 
 export interface HoveredSource {
 	source: IPriceDataSource;
 	object?: HoveredObject;
 }
+
+export interface DraggingSource extends HoveredSource {}
 
 export interface PriceScaleOnPane {
 	priceScale: PriceScale;
@@ -335,6 +341,7 @@ export class ChartModel implements IDestroyable {
 	private _width: number = 0;
 	private _initialTimeScrollPos: number | null = null;
 	private _hoveredSource: HoveredSource | null = null;
+	private _draggingSource: DraggingSource | null = null;
 	private readonly _priceScalesOptionsChanged: Delegate = new Delegate();
 	private _crosshairMoved: Delegate<TimePointIndex | null, Point | null> = new Delegate();
 
@@ -390,6 +397,44 @@ export class ChartModel implements IDestroyable {
 		}
 		if (source !== null) {
 			this.updateSource(source.source);
+		}
+	}
+
+	public draggingSource(): DraggingSource | null {
+		return this._draggingSource;
+	}
+
+	public startDraggingObject() {
+		if (this._hoveredSource?.object?.interactive) {
+			const hoveredObject = this._hoveredSource.object as HoveredObject<InteractiveHitTestData>;
+
+			if (hoveredObject.hitTestData?.isDragHandle) {
+				this._draggingSource = this._hoveredSource;
+			}
+		}
+	}
+
+	public isDragging(): boolean {
+		return !!this._draggingSource;
+	}
+
+	public dragObjectTo(pane: Pane, x: number, y: number) {
+		if (!this._draggingSource || !(this._draggingSource.source instanceof Series)) {
+			return;
+		}
+
+		const dragObject = this._draggingSource.object as HoveredObject<InteractiveHitTestData>;
+
+		if (!dragObject.hitTestData?.isDragHandle) {
+			return;
+		}
+
+		this._draggingSource.source.changeTrendLine('TODO', x, y, dragObject.hitTestData?.isDragHandle);
+	}
+
+	public stopDraggingObject() {
+		if (this._draggingSource) {
+			this._draggingSource = null;
 		}
 	}
 
