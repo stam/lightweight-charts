@@ -38,7 +38,16 @@ export class CustomTrendLine {
 	}
 
 	public applyOptions(options: Partial<TrendLineOptions<TimePoint>>): void {
-		merge(this._options, options);
+		const { startTime, endTime, ...safeOptions } = options;
+		// If our start and entime is the same,
+		// merge does some hacky shit
+		merge(this._options, safeOptions);
+		if (startTime) {
+			this._options.startTime = startTime;
+		}
+		if (endTime) {
+			this._options.endTime = endTime;
+		}
 		this.update();
 		this._series.model().lightUpdate();
 	}

@@ -155,6 +155,10 @@ export interface HoveredSource {
 	object?: HoveredObject;
 }
 
+export interface InteractiveSource extends HoveredSource {
+	object: HoveredObject<InteractiveHitTestData>;
+}
+
 export interface DraggingSource extends HoveredSource {}
 
 export interface PriceScaleOnPane {
@@ -345,7 +349,8 @@ export class ChartModel implements IDestroyable {
 	private _initialTimeScrollPos: number | null = null;
 	private _hoveredSource: HoveredSource | null = null;
 	private _draggingSource: DraggingSource | null = null;
-	private _drawingMode: DrawingMode = null;
+	private _drawingSource: InteractiveSource | null = null;
+	private _drawingMode: DrawingMode = 'trendLine';
 	private readonly _priceScalesOptionsChanged: Delegate = new Delegate();
 	private _crosshairMoved: Delegate<TimePointIndex | null, Point | null> = new Delegate();
 
@@ -389,7 +394,7 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public setDrawingMode(mode: DrawingMode) {
-		this._drawingMode;
+		this._drawingMode = mode;
 	}
 
 	public drawingMode(): DrawingMode {
@@ -426,11 +431,47 @@ export class ChartModel implements IDestroyable {
 		}
 	}
 
+	public startDrawingTrendLine(x: number, y: number) {
+		const targetSeries = this._serieses[0];
+
+		if (!targetSeries) {
+			return;
+		}
+
+		const trendLine = targetSeries.createTrendLineFromCoordinates(x, y);
+
+		if (!trendLine) {
+			return;
+		}
+
+		const generatedHitTest: HoveredObject<InteractiveHitTestData> = {
+			interactive: true,
+			hitTestData: {
+				internalId: trendLine.options().internalId,
+				isDragHandle: 'end',
+			},
+		};
+
+		const drawingSource: InteractiveSource = {
+			source: targetSeries,
+			object: generatedHitTest,
+		};
+
+		this._drawingSource = drawingSource;
+		this.setHoveredSource(drawingSource);
+
+		return drawingSource;
+	}
+
 	public isDragging(): boolean {
 		return !!this._draggingSource;
 	}
 
-	public dragObjectTo(pane: Pane, x: number, y: number) {
+	public isDrawing(): boolean {
+		return !!this._drawingSource;
+	}
+
+	public dragObjectTo(x: number, y: number) {
 		if (!this._draggingSource || !(this._draggingSource.source instanceof Series)) {
 			return;
 		}
@@ -442,6 +483,28 @@ export class ChartModel implements IDestroyable {
 		}
 
 		this._draggingSource.source.changeTrendLine(dragObject.hitTestData.internalId, x, y, dragObject.hitTestData?.isDragHandle);
+	}
+
+	public updateDrawing(x: number, y: number) {
+		if (!this._drawingSource || !(this._drawingSource.source instanceof Series)) {
+			return;
+		}
+
+		const drawing = this._drawingSource.object;
+
+		if (!drawing.hitTestData?.isDragHandle) {
+			return;
+		}
+
+		this._drawingSource.source.changeTrendLine(drawing.hitTestData.internalId, x, y, 'end');
+	}
+
+	public stopDrawing() {
+		if (this._drawingSource) {
+			this._drawingSource = null;
+			this._drawingMode = null;
+			this._hoveredSource = null;
+		}
 	}
 
 	public stopDraggingObject() {

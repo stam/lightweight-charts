@@ -4,7 +4,7 @@ import { LineStyle } from '../../renderers/draw-line';
 import { Time } from '../data-consumer';
 
 export const trendLineOptionsDefaults: TrendLineOptions<Time> = {
-	color: '#FF0000',
+	color: '#555',
 	startPrice: 0,
 	endPrice: 0,
 	startTime: '2022-01-01',

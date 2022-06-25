@@ -1,3 +1,4 @@
+import { trendLineOptionsDefaults } from '../api/options/trend-line-options-defaults';
 import { IPriceFormatter } from '../formatters/iprice-formatter';
 import { PercentageFormatter } from '../formatters/percentage-formatter';
 import { PriceFormatter } from '../formatters/price-formatter';
@@ -344,6 +345,32 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 		this._customTrendLines.push(result);
 		this.model().updateSource(this);
 		return result;
+	}
+
+	public createTrendLineFromCoordinates(x: number, y: number) {
+		const priceScale = this.priceScale();
+		const timeScale = this.model().timeScale();
+
+		if (timeScale.isEmpty() || priceScale.isEmpty()) {
+			return;
+		}
+
+		const timeIndex = timeScale.coordinateToIndex(x as Coordinate);
+		const startTime = timeScale.indexToTime(timeIndex);
+		const endTime = timeScale.indexToTime(timeIndex);
+		const price = priceScale.coordinateToPrice(y as Coordinate, priceScale.firstValue() as number);
+
+		if (!startTime || !endTime) {
+			return;
+		}
+
+		return this.createTrendLine({
+			...trendLineOptionsDefaults,
+			startTime: startTime,
+			startPrice: price,
+			endTime: endTime,
+			endPrice: price,
+		});
 	}
 
 	public removeTrendLine(line: CustomTrendLine): void {
