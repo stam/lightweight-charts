@@ -350,7 +350,7 @@ export class ChartModel implements IDestroyable {
 	private _hoveredSource: HoveredSource | null = null;
 	private _draggingSource: DraggingSource | null = null;
 	private _drawingSource: InteractiveSource | null = null;
-	private _drawingMode: DrawingMode = 'trendLine';
+	private _drawingMode: DrawingMode = null;
 	private readonly _priceScalesOptionsChanged: Delegate = new Delegate();
 	private _crosshairMoved: Delegate<TimePointIndex | null, Point | null> = new Delegate();
 
