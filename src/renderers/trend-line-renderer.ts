@@ -19,6 +19,9 @@ export interface TrendLineRendererData {
 	width: number;
 	height: number;
 	visible?: boolean;
+
+	internalId: number;
+	externalId?: string;
 }
 
 const DRAG_HANDLE_SIZE = 20;
@@ -63,10 +66,11 @@ export class TrendLineRenderer implements IPaneRenderer {
 
 		const hitTestResponse: InteractiveHitTestData = {
 			isDragHandle: false,
+			internalId: this._data.internalId,
 		};
 		const response = {
 			hitTestData: hitTestResponse,
-			externalId: '420',
+			externalId: this._data.externalId,
 			interactive: true,
 		};
 
@@ -99,7 +103,6 @@ export class TrendLineRenderer implements IPaneRenderer {
 		const HIT_RADIUS = 5;
 		const targetYWithinBounds = Math.abs(localY - targetY) < HIT_RADIUS + this._data.lineWidth;
 
-		// TODO: proper internal and external IDs
 		if (targetYWithinBounds) {
 			return response;
 		}

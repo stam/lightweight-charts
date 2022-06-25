@@ -9,7 +9,7 @@ import { IPaneView } from '../views/pane/ipane-view';
 import { Coordinate } from './coordinate';
 import { Series } from './series';
 import { TimePoint } from './time-data';
-import { TrendLineOptions } from './trend-line-options';
+import { InternalTrendLineOptions, TrendLineOptions } from './trend-line-options';
 
 interface CoordinateToAndFrom {
 	xStart: Coordinate;
@@ -18,17 +18,21 @@ interface CoordinateToAndFrom {
 	yEnd: Coordinate;
 }
 
+let internalIdCounter = 0;
+
 export class CustomTrendLine {
 	private readonly _series: Series;
 	private readonly _trendLineView: CustomTrendLinePaneView;
 	// private readonly _priceAxisView: CustomPriceLinePriceAxisView;
 	// private readonly _panePriceAxisView: PanePriceAxisView;
-	private readonly _options: TrendLineOptions<TimePoint>;
+	private readonly _options: InternalTrendLineOptions<TimePoint>;
 
 	public constructor(series: Series, options: TrendLineOptions<TimePoint>) {
 		this._series = series;
-		this._options = options;
+		this._options = { ...options, internalId: internalIdCounter };
 		this._trendLineView = new CustomTrendLinePaneView(series, this);
+
+		internalIdCounter++;
 		// this._priceAxisView = new CustomPriceLinePriceAxisView(series, this);
 		// this._panePriceAxisView = new PanePriceAxisView(this._priceAxisView, series, series.model());
 	}
@@ -39,7 +43,7 @@ export class CustomTrendLine {
 		this._series.model().lightUpdate();
 	}
 
-	public options(): TrendLineOptions<TimePoint> {
+	public options(): InternalTrendLineOptions<TimePoint> {
 		return this._options;
 	}
 

@@ -9,6 +9,7 @@ import { IPaneView } from './ipane-view';
 
 export abstract class SeriesTrendLinePaneView implements IPaneView {
 	protected readonly _lineRendererData: TrendLineRendererData = {
+		internalId: 0,
 		width: 0,
 		height: 0,
 		xStart: 0 as Coordinate,

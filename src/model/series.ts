@@ -305,8 +305,12 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 		this.model().updateSource(this);
 	}
 
-	public changeTrendLine(id: string, x: number, y: number, handleType: 'start' | 'end') {
-		const trendLine = this._customTrendLines[0];
+	public changeTrendLine(internalId: number, x: number, y: number, handleType: 'start' | 'end') {
+		const trendLine = this._customTrendLines.find((t) => t.options().internalId === internalId);
+
+		if (!trendLine) {
+			return;
+		}
 
 		const priceScale = this.priceScale();
 		const timeScale = this.model().timeScale();

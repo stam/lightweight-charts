@@ -6,9 +6,10 @@ import { SeriesTrendLinePaneView } from './series-trend-line-pane-view';
 export class CustomTrendLinePaneView extends SeriesTrendLinePaneView {
 	private readonly _trendLine: CustomTrendLine;
 
-	public constructor(series: Series, priceLine: CustomTrendLine) {
+	public constructor(series: Series, trendLine: CustomTrendLine) {
 		super(series);
-		this._trendLine = priceLine;
+		this._trendLine = trendLine;
+		this._lineRendererData.internalId = trendLine.options().internalId;
 	}
 
 	protected _updateImpl(height: number, width: number): void {

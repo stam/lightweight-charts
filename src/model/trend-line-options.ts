@@ -42,4 +42,13 @@ export interface TrendLineOptions<TimeType> {
 	 * @defaultValue `''`
 	 */
 	title: string;
+
+	/**
+	 * The ID of the trendline.
+	 */
+	id?: string;
+}
+
+export interface InternalTrendLineOptions<TimeType> extends TrendLineOptions<TimeType> {
+	internalId: number;
 }

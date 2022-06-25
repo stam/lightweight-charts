@@ -147,6 +147,7 @@ export interface HoveredObject<T = unknown> {
 
 export interface InteractiveHitTestData {
 	isDragHandle: 'start' | 'end' | false;
+	internalId: number;
 }
 
 export interface HoveredSource {
@@ -429,7 +430,7 @@ export class ChartModel implements IDestroyable {
 			return;
 		}
 
-		this._draggingSource.source.changeTrendLine('TODO', x, y, dragObject.hitTestData?.isDragHandle);
+		this._draggingSource.source.changeTrendLine(dragObject.hitTestData.internalId, x, y, dragObject.hitTestData?.isDragHandle);
 	}
 
 	public stopDraggingObject() {
