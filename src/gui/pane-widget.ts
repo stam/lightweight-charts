@@ -274,7 +274,6 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		this._setCrosshairPosition(x, y);
 		const hitTest = this.hitTest(x, y);
 
-		// TODO: also check iff drawing mode
 		if (hitTest && hitTest.object?.interactive) {
 			this._hoveredInteractiveObject = hitTest.object;
 		} else {

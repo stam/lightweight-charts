@@ -6,14 +6,9 @@ import { ISubscription } from '../helpers/isubscription';
 import { DeepPartial } from '../helpers/strict-type-checks';
 
 import { BarPrice, BarPrices } from '../model/bar';
-import { ChartModel, ChartOptionsInternal } from '../model/chart-model';
+import { ChartModel, ChartOptionsInternal, DrawingMode } from '../model/chart-model';
 import { Coordinate } from '../model/coordinate';
-import {
-	InvalidateMask,
-	InvalidationLevel,
-	TimeScaleInvalidation,
-	TimeScaleInvalidationType,
-} from '../model/invalidate-mask';
+import { InvalidateMask, InvalidationLevel, TimeScaleInvalidation, TimeScaleInvalidationType } from '../model/invalidate-mask';
 import { Point } from '../model/point';
 import { PriceAxisPosition } from '../model/price-scale';
 import { Series } from '../model/series';
@@ -70,10 +65,7 @@ export class ChartWidget implements IDestroyable {
 		this._onWheelBound = this._onMousewheel.bind(this);
 		this._element.addEventListener('wheel', this._onWheelBound, { passive: false });
 
-		this._model = new ChartModel(
-			this._invalidateHandler.bind(this),
-			this._options
-		);
+		this._model = new ChartModel(this._invalidateHandler.bind(this), this._options);
 		this.model().crosshairMoved().subscribe(this._onPaneWidgetCrosshairMoved.bind(this), this);
 
 		this._timeAxisWidget = new TimeAxisWidget(this);
@@ -109,6 +101,10 @@ export class ChartWidget implements IDestroyable {
 		this._updateTimeAxisVisibility();
 		this._model.timeScale().optionsApplied().subscribe(this._model.fullUpdate.bind(this._model), this);
 		this._model.priceScalesOptionsChanged().subscribe(this._model.fullUpdate.bind(this._model), this);
+	}
+
+	public setDrawingMode(mode: DrawingMode) {
+		this._model.setDrawingMode(mode);
 	}
 
 	public model(): ChartModel {
@@ -321,9 +317,7 @@ export class ChartWidget implements IDestroyable {
 		// we don't need to worry about exactly pane widget here
 		// because all pane widgets have the same width of price axis widget
 		// see _adjustSizeImpl
-		const priceAxisWidget = position === 'left'
-			? this._paneWidgets[0].leftPriceAxisWidget()
-			: this._paneWidgets[0].rightPriceAxisWidget();
+		const priceAxisWidget = position === 'left' ? this._paneWidgets[0].leftPriceAxisWidget() : this._paneWidgets[0].rightPriceAxisWidget();
 		return ensureNotNull(priceAxisWidget).getWidth();
 	}
 
@@ -413,8 +407,7 @@ export class ChartWidget implements IDestroyable {
 		let deltaX = event.deltaX / 100;
 		let deltaY = -(event.deltaY / 100);
 
-		if ((deltaX === 0 || !this._options.handleScroll.mouseWheel) &&
-			(deltaY === 0 || !this._options.handleScale.mouseWheel)) {
+		if ((deltaX === 0 || !this._options.handleScroll.mouseWheel) && (deltaY === 0 || !this._options.handleScale.mouseWheel)) {
 			return;
 		}
 
@@ -443,7 +436,7 @@ export class ChartWidget implements IDestroyable {
 		}
 
 		if (deltaX !== 0 && this._options.handleScroll.mouseWheel) {
-			this.model().scrollChart(deltaX * -80 as Coordinate); // 80 is a made up coefficient, and minus is for the "natural" scroll
+			this.model().scrollChart((deltaX * -80) as Coordinate); // 80 is a made up coefficient, and minus is for the "natural" scroll
 		}
 	}
 
@@ -456,10 +449,7 @@ export class ChartWidget implements IDestroyable {
 		}
 
 		// light or full invalidate actions
-		if (
-			invalidationType === InvalidationLevel.Full ||
-			invalidationType === InvalidationLevel.Light
-		) {
+		if (invalidationType === InvalidationLevel.Full || invalidationType === InvalidationLevel.Light) {
 			this._applyMomentaryAutoScale(invalidateMask);
 			this._applyTimeScaleInvalidations(invalidateMask);
 
@@ -628,13 +618,9 @@ export class ChartWidget implements IDestroyable {
 
 		const hoveredSource = this.model().hoveredSource();
 
-		const hoveredSeries = hoveredSource !== null && hoveredSource.source instanceof Series
-			? hoveredSource.source
-			: undefined;
+		const hoveredSeries = hoveredSource !== null && hoveredSource.source instanceof Series ? hoveredSource.source : undefined;
 
-		const hoveredObject = hoveredSource !== null && hoveredSource.object !== undefined
-			? hoveredSource.object.externalId
-			: undefined;
+		const hoveredObject = hoveredSource !== null && hoveredSource.object !== undefined ? hoveredSource.object.externalId : undefined;
 
 		return {
 			time: clientTime,

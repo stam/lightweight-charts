@@ -325,6 +325,8 @@ interface GradientColorsCache {
 	colors: Map<number, string>;
 }
 
+export type DrawingMode = null | 'trendLine';
+
 export class ChartModel implements IDestroyable {
 	private readonly _options: ChartOptionsInternal;
 	private readonly _invalidateHandler: InvalidateHandler;
@@ -343,6 +345,7 @@ export class ChartModel implements IDestroyable {
 	private _initialTimeScrollPos: number | null = null;
 	private _hoveredSource: HoveredSource | null = null;
 	private _draggingSource: DraggingSource | null = null;
+	private _drawingMode: DrawingMode = null;
 	private readonly _priceScalesOptionsChanged: Delegate = new Delegate();
 	private _crosshairMoved: Delegate<TimePointIndex | null, Point | null> = new Delegate();
 
@@ -383,6 +386,14 @@ export class ChartModel implements IDestroyable {
 	public updateSource(source: IPriceDataSource): void {
 		const inv = this._invalidationMaskForSource(source);
 		this._invalidate(inv);
+	}
+
+	public setDrawingMode(mode: DrawingMode) {
+		this._drawingMode;
+	}
+
+	public drawingMode(): DrawingMode {
+		return this._drawingMode;
 	}
 
 	public hoveredSource(): HoveredSource | null {

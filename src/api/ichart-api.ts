@@ -1,7 +1,7 @@
 import { DeepPartial } from '../helpers/strict-type-checks';
 
 import { BarPrice, BarPrices } from '../model/bar';
-import { ChartOptions } from '../model/chart-model';
+import { ChartOptions, DrawingMode } from '../model/chart-model';
 import { Point } from '../model/point';
 import { SeriesMarker } from '../model/series-markers';
 import {
@@ -239,6 +239,13 @@ export interface IChartApi {
 	 * @param options - Any subset of options.
 	 */
 	applyOptions(options: DeepPartial<ChartOptions>): void;
+
+	/**
+	 * Set drawing mode
+	 *
+	 * @param mode - null | 'drawing'
+	 */
+	setDrawingMode(mode: DrawingMode): void;
 
 	/**
 	 * Returns currently applied options

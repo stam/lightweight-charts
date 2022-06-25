@@ -6,7 +6,7 @@ import { warn } from '../helpers/logger';
 import { clone, DeepPartial, isBoolean, merge } from '../helpers/strict-type-checks';
 
 import { BarPrice, BarPrices } from '../model/bar';
-import { ChartOptions, ChartOptionsInternal } from '../model/chart-model';
+import { ChartOptions, ChartOptionsInternal, DrawingMode } from '../model/chart-model';
 import { ColorType } from '../model/layout-options';
 import { Series } from '../model/series';
 import {
@@ -163,28 +163,21 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 	private readonly _timeScaleApi: TimeScaleApi;
 
 	public constructor(container: HTMLElement, options?: DeepPartial<ChartOptions>) {
-		const internalOptions = (options === undefined) ?
-			clone(chartOptionsDefaults) :
-			merge(clone(chartOptionsDefaults), toInternalOptions(options)) as ChartOptionsInternal;
+		const internalOptions =
+			options === undefined ? clone(chartOptionsDefaults) : (merge(clone(chartOptionsDefaults), toInternalOptions(options)) as ChartOptionsInternal);
 
 		this._chartWidget = new ChartWidget(container, internalOptions);
 
-		this._chartWidget.clicked().subscribe(
-			(paramSupplier: MouseEventParamsImplSupplier) => {
-				if (this._clickedDelegate.hasListeners()) {
-					this._clickedDelegate.fire(this._convertMouseParams(paramSupplier()));
-				}
-			},
-			this
-		);
-		this._chartWidget.crosshairMoved().subscribe(
-			(paramSupplier: MouseEventParamsImplSupplier) => {
-				if (this._crosshairMovedDelegate.hasListeners()) {
-					this._crosshairMovedDelegate.fire(this._convertMouseParams(paramSupplier()));
-				}
-			},
-			this
-		);
+		this._chartWidget.clicked().subscribe((paramSupplier: MouseEventParamsImplSupplier) => {
+			if (this._clickedDelegate.hasListeners()) {
+				this._clickedDelegate.fire(this._convertMouseParams(paramSupplier()));
+			}
+		}, this);
+		this._chartWidget.crosshairMoved().subscribe((paramSupplier: MouseEventParamsImplSupplier) => {
+			if (this._crosshairMovedDelegate.hasListeners()) {
+				this._crosshairMovedDelegate.fire(this._convertMouseParams(paramSupplier()));
+			}
+		}, this);
 
 		const model = this._chartWidget.model();
 		this._timeScaleApi = new TimeScaleApi(model, this._chartWidget.timeAxisWidget());
@@ -207,6 +200,10 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 
 	public resize(width: number, height: number, forceRepaint?: boolean): void {
 		this._chartWidget.resize(width, height, forceRepaint);
+	}
+
+	public setDrawingMode(mode: DrawingMode) {
+		this._chartWidget.setDrawingMode(mode);
 	}
 
 	public addAreaSeries(options: AreaSeriesPartialOptions = {}): ISeriesApi<'Area'> {
