@@ -33,13 +33,21 @@ export class TrendLineRenderer implements IPaneRenderer {
 		this._data = data;
 	}
 
-	public draw(ctx: CanvasRenderingContext2D, pixelRatio: number, isHovered: boolean, hitTestData?: unknown): void {
+	public draw(ctx: CanvasRenderingContext2D, pixelRatio: number, isSourceHovered: boolean, hitTestData?: any): void {
 		if (this._data === null) {
 			return;
 		}
 
 		if (this._data.visible === false) {
 			return;
+		}
+
+		let isHovered = false;
+		if (hitTestData) {
+			const interactiveHitTestData = hitTestData as InteractiveHitTestData;
+			if (interactiveHitTestData.isDragHandle !== undefined && interactiveHitTestData.internalId === this._data.internalId) {
+				isHovered = true;
+			}
 		}
 
 		const xStart = Math.round(this._data.xStart * pixelRatio);
