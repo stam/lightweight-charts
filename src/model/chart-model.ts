@@ -397,6 +397,9 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public setDrawingMode(mode: DrawingMode) {
+		if (this._drawingMode && !mode) {
+			this.cancelDrawing();
+		}
 		this._drawingMode = mode;
 		this._drawingModeChanged.fire(mode);
 	}
@@ -507,6 +510,22 @@ export class ChartModel implements IDestroyable {
 		if (this._drawingSource) {
 			this._drawingSource = null;
 			this.setDrawingMode(null);
+			this._hoveredSource = null;
+		}
+	}
+
+	private cancelDrawing() {
+		if (this._drawingSource) {
+			if (this._drawingSource.source instanceof Series) {
+				const drawing = this._drawingSource.object;
+
+				if (drawing.hitTestData?.isDragHandle) {
+					// cancelDrawing: remove trendline in progress
+					this._drawingSource.source.removeTrendLineByInternalId(drawing.hitTestData.internalId);
+				}
+			}
+
+			this._drawingSource = null;
 			this._hoveredSource = null;
 		}
 	}

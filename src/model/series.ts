@@ -381,6 +381,16 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 		this.model().updateSource(this);
 	}
 
+	public removeTrendLineByInternalId(internalId: number): void {
+		const trendLine = this._customTrendLines.find((t) => t.options().internalId === internalId);
+
+		if (!trendLine) {
+			return;
+		}
+
+		this.removeTrendLine(trendLine);
+	}
+
 	public seriesType(): T {
 		return this._seriesType;
 	}
