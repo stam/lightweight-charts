@@ -38,8 +38,9 @@ const enum Constants {
 }
 
 const enum CursorType {
-	Default,
-	Pointer,
+	Default = 'default',
+	Crosshair = 'crosshair',
+	Pointer = 'pointer',
 }
 
 type DrawFunction = (renderer: IPaneRenderer, ctx: CanvasRenderingContext2D, pixelRatio: number, isHovered: boolean, hitTestData?: unknown) => void;
@@ -491,7 +492,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	}
 
 	private _setCursor(type: CursorType): void {
-		this._topCanvasBinding.canvas.style.cursor = type === CursorType.Pointer ? 'pointer' : 'default';
+		this._topCanvasBinding.canvas.style.cursor = type;
 	}
 
 	public paint(type: InvalidationLevel): void {
@@ -514,7 +515,9 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			this._rightPriceAxisWidget.paint(type);
 		}
 
-		if (this._hoveredInteractiveObject) {
+		if (this.chart().model().drawingMode() !== null) {
+			this._setCursor(CursorType.Crosshair);
+		} else if (this._hoveredInteractiveObject) {
 			this._setCursor(CursorType.Pointer);
 		} else {
 			this._setCursor(CursorType.Default);
