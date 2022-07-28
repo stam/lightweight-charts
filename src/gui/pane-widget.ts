@@ -307,7 +307,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const model = this._model();
 
 		if (model.isDrawing()) {
-			model.stopDrawing();
+			model.completeDrawing();
 			this._hoveredInteractiveObject = null;
 		} else if (model.drawingMode() === 'trendLine') {
 			const source = model.startDrawingTrendLine(event.localX, event.localY);

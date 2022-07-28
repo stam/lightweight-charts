@@ -307,7 +307,7 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 	}
 
 	public changeTrendLine(internalId: number, x: number, y: number, handleType: 'start' | 'end') {
-		const trendLine = this._customTrendLines.find((t) => t.options().internalId === internalId);
+		const trendLine = this._customTrendLines.find((t) => t.id() === internalId);
 
 		if (!trendLine) {
 			return;
@@ -381,14 +381,8 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 		this.model().updateSource(this);
 	}
 
-	public removeTrendLineByInternalId(internalId: number): void {
-		const trendLine = this._customTrendLines.find((t) => t.options().internalId === internalId);
-
-		if (!trendLine) {
-			return;
-		}
-
-		this.removeTrendLine(trendLine);
+	public findTrendLineByInternalId(internalId: number): CustomTrendLine | undefined {
+		return this._customTrendLines.find((t) => t.id() === internalId);
 	}
 
 	public seriesType(): T {

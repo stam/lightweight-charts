@@ -6,7 +6,7 @@ import { warn } from '../helpers/logger';
 import { clone, DeepPartial, isBoolean, merge } from '../helpers/strict-type-checks';
 
 import { BarPrice, BarPrices } from '../model/bar';
-import { ChartOptions, ChartOptionsInternal, DrawingMode } from '../model/chart-model';
+import { ChartOptions, ChartOptionsInternal, DrawingEvent, DrawingMode } from '../model/chart-model';
 import { ColorType } from '../model/layout-options';
 import { Series } from '../model/series';
 import {
@@ -32,7 +32,7 @@ import {
 import { CandlestickSeriesApi } from './candlestick-series-api';
 import { DataUpdatesConsumer, SeriesDataItemTypeMap } from './data-consumer';
 import { DataLayer, DataUpdateResponse, SeriesChanges } from './data-layer';
-import { DrawingModeHandler, IChartApi, MouseEventHandler, MouseEventParams } from './ichart-api';
+import { DrawingEventHandler, DrawingModeHandler, IChartApi, MouseEventHandler, MouseEventParams } from './ichart-api';
 import { IPriceScaleApi } from './iprice-scale-api';
 import { ISeriesApi } from './iseries-api';
 import { ITimeScaleApi } from './itime-scale-api';
@@ -159,6 +159,7 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 
 	private readonly _clickedDelegate: Delegate<MouseEventParams> = new Delegate();
 	private readonly _drawingModeDelegate: Delegate<DrawingMode> = new Delegate();
+	private readonly _drawingChangedDelegate: Delegate<DrawingEvent> = new Delegate();
 	private readonly _crosshairMovedDelegate: Delegate<MouseEventParams> = new Delegate();
 
 	private readonly _timeScaleApi: TimeScaleApi;
@@ -185,6 +186,11 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		model.drawingModeChanged().subscribe((drawingMode) => {
 			if (this._drawingModeDelegate.hasListeners()) {
 				this._drawingModeDelegate.fire(drawingMode);
+			}
+		});
+		model.drawingChanged().subscribe((event) => {
+			if (this._drawingChangedDelegate.hasListeners()) {
+				this._drawingChangedDelegate.fire(event);
 			}
 		});
 		this._timeScaleApi = new TimeScaleApi(model, this._chartWidget.timeAxisWidget());
@@ -342,6 +348,14 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 
 	public unsubscribeDrawingMode(handler: DrawingModeHandler): void {
 		this._drawingModeDelegate.unsubscribe(handler);
+	}
+
+	public subscribeDrawingChanged(handler: DrawingEventHandler): void {
+		this._drawingChangedDelegate.subscribe(handler);
+	}
+
+	public unsubscribeDrawingChanged(handler: DrawingEventHandler): void {
+		this._drawingChangedDelegate.unsubscribe(handler);
 	}
 
 	public priceScale(priceScaleId?: string): IPriceScaleApi {

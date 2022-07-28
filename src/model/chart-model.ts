@@ -26,6 +26,7 @@ import { Series, SeriesOptionsInternal } from './series';
 import { SeriesOptionsMap, SeriesType } from './series-options';
 import { LogicalRange, TimePointIndex, TimeScalePoint } from './time-data';
 import { TimeScale, TimeScaleOptions } from './time-scale';
+import { TrendLineOptions } from './trend-line-options';
 import { Watermark, WatermarkOptions } from './watermark';
 
 /**
@@ -330,8 +331,12 @@ interface GradientColorsCache {
 }
 
 export type DrawingMode = null | 'trendLine';
-
-export type DrawingModeImplSupplier = () => DrawingMode;
+export type DrawingAction = 'created' | 'updated' | 'deleted';
+export type DrawingEvent = {
+	action: DrawingAction;
+	type: 'trendLine';
+	options: TrendLineOptions<string>;
+};
 
 export class ChartModel implements IDestroyable {
 	private readonly _options: ChartOptionsInternal;
@@ -354,6 +359,7 @@ export class ChartModel implements IDestroyable {
 	private _drawingSource: InteractiveSource | null = null;
 	private _drawingMode: DrawingMode = null;
 	private readonly _drawingModeChanged: Delegate<DrawingMode> = new Delegate();
+	private readonly _drawingChanged: Delegate<DrawingEvent> = new Delegate();
 	private readonly _priceScalesOptionsChanged: Delegate = new Delegate();
 	private _crosshairMoved: Delegate<TimePointIndex | null, Point | null> = new Delegate();
 
@@ -454,7 +460,7 @@ export class ChartModel implements IDestroyable {
 		const generatedHitTest: HoveredObject<InteractiveHitTestData> = {
 			interactive: true,
 			hitTestData: {
-				internalId: trendLine.options().internalId,
+				internalId: trendLine.id(),
 				isDragHandle: 'end',
 			},
 		};
@@ -506,8 +512,17 @@ export class ChartModel implements IDestroyable {
 		this._drawingSource.source.changeTrendLine(drawing.hitTestData.internalId, x, y, 'end');
 	}
 
-	public stopDrawing() {
+	public completeDrawing() {
 		if (this._drawingSource) {
+			const trendLine = this.getDrawingBySource(this._drawingSource);
+			if (trendLine) {
+				this._drawingChanged.fire({
+					action: 'created',
+					type: 'trendLine',
+					options: trendLine.externalOptions(),
+				});
+			}
+
 			this._drawingSource = null;
 			this.setDrawingMode(null);
 			this._hoveredSource = null;
@@ -520,8 +535,10 @@ export class ChartModel implements IDestroyable {
 				const drawing = this._drawingSource.object;
 
 				if (drawing.hitTestData?.isDragHandle) {
-					// cancelDrawing: remove trendline in progress
-					this._drawingSource.source.removeTrendLineByInternalId(drawing.hitTestData.internalId);
+					const trendLine = this._drawingSource.source.findTrendLineByInternalId(drawing.hitTestData.internalId);
+					if (trendLine) {
+						this._drawingSource.source.removeTrendLine(trendLine);
+					}
 				}
 			}
 
@@ -530,8 +547,36 @@ export class ChartModel implements IDestroyable {
 		}
 	}
 
+	private getDrawingBySource(hoveredSource: HoveredSource) {
+		if (!hoveredSource) {
+			return;
+		}
+		if (hoveredSource.source instanceof Series) {
+			const drawing = hoveredSource.object;
+
+			if (!drawing) {
+				return;
+			}
+
+			const hitTestData = drawing?.hitTestData as InteractiveHitTestData;
+			if (hitTestData?.internalId !== undefined) {
+				return hoveredSource.source.findTrendLineByInternalId(hitTestData.internalId);
+			}
+		}
+		return undefined;
+	}
+
 	public stopDraggingObject() {
 		if (this._draggingSource) {
+			const trendLine = this.getDrawingBySource(this._draggingSource);
+			if (trendLine) {
+				this._drawingChanged.fire({
+					action: 'updated',
+					type: 'trendLine',
+					options: trendLine.externalOptions(),
+				});
+			}
+
 			this._draggingSource = null;
 		}
 	}
@@ -886,6 +931,10 @@ export class ChartModel implements IDestroyable {
 
 	public drawingModeChanged(): ISubscription<DrawingMode> {
 		return this._drawingModeChanged;
+	}
+
+	public drawingChanged(): ISubscription<DrawingEvent> {
+		return this._drawingChanged;
 	}
 
 	public createSeries<T extends SeriesType>(seriesType: T, options: SeriesOptionsMap[T]): Series<T> {

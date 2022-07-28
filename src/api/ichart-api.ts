@@ -1,7 +1,7 @@
 import { DeepPartial } from '../helpers/strict-type-checks';
 
 import { BarPrice, BarPrices } from '../model/bar';
-import { ChartOptions, DrawingMode } from '../model/chart-model';
+import { ChartOptions, DrawingEvent, DrawingMode } from '../model/chart-model';
 import { Point } from '../model/point';
 import { SeriesMarker } from '../model/series-markers';
 import {
@@ -58,6 +58,7 @@ export interface MouseEventParams {
  */
 export type MouseEventHandler = (param: MouseEventParams) => void;
 export type DrawingModeHandler = (param: DrawingMode) => void;
+export type DrawingEventHandler = (param: DrawingEvent) => void;
 
 /**
  * The main interface of a single chart.
@@ -221,6 +222,9 @@ export interface IChartApi {
 
 	subscribeDrawingMode(handler: DrawingModeHandler): void;
 	unsubscribeDrawingMode(handler: DrawingModeHandler): void;
+
+	subscribeDrawingChanged(handler: DrawingEventHandler): void;
+	unsubscribeDrawingChanged(handler: DrawingEventHandler): void;
 
 	/**
 	 * Returns API to manipulate a price scale.

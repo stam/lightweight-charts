@@ -9,7 +9,7 @@ import { IPaneView } from '../views/pane/ipane-view';
 import { Coordinate } from './coordinate';
 import { Series } from './series';
 import { TimePoint } from './time-data';
-import { InternalTrendLineOptions, TrendLineOptions } from './trend-line-options';
+import { TrendLineOptions } from './trend-line-options';
 
 interface CoordinateToAndFrom {
 	xStart: Coordinate;
@@ -20,16 +20,24 @@ interface CoordinateToAndFrom {
 
 let internalIdCounter = 0;
 
+const readableDate = (t: TimePoint): string => {
+	const parsedDate = new Date(t.timestamp * 1000);
+	const userTimezoneOffset = parsedDate.getTimezoneOffset() * 60000;
+	const utcDate = new Date(parsedDate.getTime() - userTimezoneOffset);
+
+	return utcDate.toISOString().substring(0, 10);
+};
+
 export class CustomTrendLine {
 	private readonly _series: Series;
 	private readonly _trendLineView: CustomTrendLinePaneView;
 	// private readonly _priceAxisView: CustomPriceLinePriceAxisView;
 	// private readonly _panePriceAxisView: PanePriceAxisView;
-	private readonly _options: InternalTrendLineOptions<TimePoint>;
+	private readonly _options: TrendLineOptions<TimePoint>;
 
 	public constructor(series: Series, options: TrendLineOptions<TimePoint>) {
 		this._series = series;
-		this._options = { ...options, internalId: internalIdCounter };
+		this._options = { ...options, id: internalIdCounter };
 		this._trendLineView = new CustomTrendLinePaneView(series, this);
 
 		internalIdCounter++;
@@ -52,8 +60,17 @@ export class CustomTrendLine {
 		this._series.model().lightUpdate();
 	}
 
-	public options(): InternalTrendLineOptions<TimePoint> {
+	public options(): TrendLineOptions<TimePoint> {
 		return this._options;
+	}
+
+	public id(): number {
+		return this._options.id === undefined ? -1 : this._options.id;
+	}
+
+	public externalOptions(): TrendLineOptions<string> {
+		const options = this.options();
+		return { ...options, startTime: readableDate(options.startTime), endTime: readableDate(options.endTime) };
 	}
 
 	public paneViews(): readonly IPaneView[] {

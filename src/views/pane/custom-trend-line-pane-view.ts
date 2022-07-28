@@ -9,7 +9,7 @@ export class CustomTrendLinePaneView extends SeriesTrendLinePaneView {
 	public constructor(series: Series, trendLine: CustomTrendLine) {
 		super(series);
 		this._trendLine = trendLine;
-		this._lineRendererData.internalId = trendLine.options().internalId;
+		this._lineRendererData.internalId = trendLine.id();
 	}
 
 	protected _updateImpl(height: number, width: number): void {
