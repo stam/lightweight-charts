@@ -32,7 +32,7 @@ import {
 import { CandlestickSeriesApi } from './candlestick-series-api';
 import { DataUpdatesConsumer, SeriesDataItemTypeMap } from './data-consumer';
 import { DataLayer, DataUpdateResponse, SeriesChanges } from './data-layer';
-import { IChartApi, MouseEventHandler, MouseEventParams } from './ichart-api';
+import { DrawingModeHandler, IChartApi, MouseEventHandler, MouseEventParams } from './ichart-api';
 import { IPriceScaleApi } from './iprice-scale-api';
 import { ISeriesApi } from './iseries-api';
 import { ITimeScaleApi } from './itime-scale-api';
@@ -158,6 +158,7 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 	private readonly _seriesMapReversed: Map<Series, SeriesApi<SeriesType>> = new Map();
 
 	private readonly _clickedDelegate: Delegate<MouseEventParams> = new Delegate();
+	private readonly _drawingModeDelegate: Delegate<DrawingMode> = new Delegate();
 	private readonly _crosshairMovedDelegate: Delegate<MouseEventParams> = new Delegate();
 
 	private readonly _timeScaleApi: TimeScaleApi;
@@ -180,6 +181,12 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		}, this);
 
 		const model = this._chartWidget.model();
+
+		model.drawingModeChanged().subscribe((drawingMode) => {
+			if (this._drawingModeDelegate.hasListeners()) {
+				this._drawingModeDelegate.fire(drawingMode);
+			}
+		});
 		this._timeScaleApi = new TimeScaleApi(model, this._chartWidget.timeAxisWidget());
 	}
 
@@ -327,6 +334,14 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 
 	public unsubscribeCrosshairMove(handler: MouseEventHandler): void {
 		this._crosshairMovedDelegate.unsubscribe(handler);
+	}
+
+	public subscribeDrawingMode(handler: DrawingModeHandler): void {
+		this._drawingModeDelegate.subscribe(handler);
+	}
+
+	public unsubscribeDrawingMode(handler: DrawingModeHandler): void {
+		this._drawingModeDelegate.unsubscribe(handler);
 	}
 
 	public priceScale(priceScaleId?: string): IPriceScaleApi {

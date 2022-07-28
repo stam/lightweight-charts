@@ -331,6 +331,8 @@ interface GradientColorsCache {
 
 export type DrawingMode = null | 'trendLine';
 
+export type DrawingModeImplSupplier = () => DrawingMode;
+
 export class ChartModel implements IDestroyable {
 	private readonly _options: ChartOptionsInternal;
 	private readonly _invalidateHandler: InvalidateHandler;
@@ -351,6 +353,7 @@ export class ChartModel implements IDestroyable {
 	private _draggingSource: DraggingSource | null = null;
 	private _drawingSource: InteractiveSource | null = null;
 	private _drawingMode: DrawingMode = null;
+	private readonly _drawingModeChanged: Delegate<DrawingMode> = new Delegate();
 	private readonly _priceScalesOptionsChanged: Delegate = new Delegate();
 	private _crosshairMoved: Delegate<TimePointIndex | null, Point | null> = new Delegate();
 
@@ -395,6 +398,7 @@ export class ChartModel implements IDestroyable {
 
 	public setDrawingMode(mode: DrawingMode) {
 		this._drawingMode = mode;
+		this._drawingModeChanged.fire(mode);
 	}
 
 	public drawingMode(): DrawingMode {
@@ -502,7 +506,7 @@ export class ChartModel implements IDestroyable {
 	public stopDrawing() {
 		if (this._drawingSource) {
 			this._drawingSource = null;
-			this._drawingMode = null;
+			this.setDrawingMode(null);
 			this._hoveredSource = null;
 		}
 	}
@@ -859,6 +863,10 @@ export class ChartModel implements IDestroyable {
 
 	public priceScalesOptionsChanged(): ISubscription {
 		return this._priceScalesOptionsChanged;
+	}
+
+	public drawingModeChanged(): ISubscription<DrawingMode> {
+		return this._drawingModeChanged;
 	}
 
 	public createSeries<T extends SeriesType>(seriesType: T, options: SeriesOptionsMap[T]): Series<T> {

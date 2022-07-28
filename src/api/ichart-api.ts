@@ -57,6 +57,7 @@ export interface MouseEventParams {
  * A custom function use to handle mouse events.
  */
 export type MouseEventHandler = (param: MouseEventParams) => void;
+export type DrawingModeHandler = (param: DrawingMode) => void;
 
 /**
  * The main interface of a single chart.
@@ -217,6 +218,9 @@ export interface IChartApi {
 	 * ```
 	 */
 	unsubscribeCrosshairMove(handler: MouseEventHandler): void;
+
+	subscribeDrawingMode(handler: DrawingModeHandler): void;
+	unsubscribeDrawingMode(handler: DrawingModeHandler): void;
 
 	/**
 	 * Returns API to manipulate a price scale.
