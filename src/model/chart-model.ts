@@ -148,6 +148,7 @@ export interface HoveredObject<T = unknown> {
 
 export interface InteractiveHitTestData {
 	isDragHandle: 'start' | 'end' | false;
+	selected: boolean;
 	internalId: number;
 }
 
@@ -156,7 +157,7 @@ export interface HoveredSource {
 	object?: HoveredObject;
 }
 
-export interface InteractiveSource extends HoveredSource {
+export interface Drawing extends HoveredSource {
 	object: HoveredObject<InteractiveHitTestData>;
 }
 
@@ -353,9 +354,10 @@ export class ChartModel implements IDestroyable {
 	private _width: number = 0;
 	private _initialTimeScrollPos: number | null = null;
 	private _hoveredSource: HoveredSource | null = null;
-	private _hoveredInteractible: InteractiveSource | null = null;
-	private _draggedInteractible: InteractiveSource | null = null;
-	private _drawingSource: InteractiveSource | null = null;
+	private _hoveredDrawing: Drawing | null = null;
+	private _selectedDrawing: Drawing | null = null;
+	private _draggedDrawing: Drawing | null = null;
+	private _drawingSource: Drawing | null = null; // rename to activeDrawing?
 	private _drawingMode: DrawingMode = null;
 	private readonly _drawingModeChanged: Delegate<DrawingMode> = new Delegate();
 	private readonly _drawingChanged: Delegate<DrawingEvent> = new Delegate();
@@ -417,8 +419,12 @@ export class ChartModel implements IDestroyable {
 		return this._hoveredSource;
 	}
 
-	public hoveredInteractible(): InteractiveSource | null {
-		return this._hoveredInteractible;
+	public hoveredDrawing(): Drawing | null {
+		return this._hoveredDrawing;
+	}
+
+	public selectedDrawing(): Drawing | null {
+		return this._selectedDrawing;
 	}
 
 	public setHoveredSource(source: HoveredSource | null): void {
@@ -433,18 +439,22 @@ export class ChartModel implements IDestroyable {
 		}
 	}
 
-	public setHoveredInteractible(object: InteractiveSource | null): void {
-		this._hoveredInteractible = object;
+	public selectDrawing(source: Drawing | null): void {
+		this._selectedDrawing = source;
 	}
 
-	public draggedInteractible(): InteractiveSource | null {
-		return this._draggedInteractible;
+	public setHoveredDrawing(object: Drawing | null): void {
+		this._hoveredDrawing = object;
+	}
+
+	public draggedDrawing(): Drawing | null {
+		return this._draggedDrawing;
 	}
 
 	public startDraggingObject() {
-		if (this._hoveredInteractible) {
-			if (this._hoveredInteractible.object.hitTestData?.isDragHandle) {
-				this._draggedInteractible = this._hoveredInteractible;
+		if (this._hoveredDrawing) {
+			if (this._hoveredDrawing.object.hitTestData?.isDragHandle) {
+				this._draggedDrawing = this._hoveredDrawing;
 			}
 		}
 	}
@@ -466,11 +476,12 @@ export class ChartModel implements IDestroyable {
 			interactive: true,
 			hitTestData: {
 				internalId: trendLine.id(),
+				selected: false,
 				isDragHandle: 'end',
 			},
 		};
 
-		const drawingSource: InteractiveSource = {
+		const drawingSource: Drawing = {
 			source: targetSeries,
 			object: generatedHitTest,
 		};
@@ -482,7 +493,7 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public isDragging(): boolean {
-		return !!this._draggedInteractible;
+		return !!this._draggedDrawing;
 	}
 
 	public isDrawing(): boolean {
@@ -490,17 +501,17 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public dragObjectTo(x: number, y: number) {
-		if (!this._draggedInteractible || !(this._draggedInteractible.source instanceof Series)) {
+		if (!this._draggedDrawing || !(this._draggedDrawing.source instanceof Series)) {
 			return;
 		}
 
-		const dragObject = this._draggedInteractible.object as HoveredObject<InteractiveHitTestData>;
+		const dragObject = this._draggedDrawing.object as HoveredObject<InteractiveHitTestData>;
 
 		if (!dragObject.hitTestData?.isDragHandle) {
 			return;
 		}
 
-		this._draggedInteractible.source.changeTrendLine(dragObject.hitTestData.internalId, x, y, dragObject.hitTestData?.isDragHandle);
+		this._draggedDrawing.source.changeTrendLine(dragObject.hitTestData.internalId, x, y, dragObject.hitTestData?.isDragHandle);
 	}
 
 	public updateDrawing(x: number, y: number) {
@@ -572,8 +583,8 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public stopDraggingObject() {
-		if (this._draggedInteractible) {
-			const trendLine = this.getDrawingBySource(this._draggedInteractible);
+		if (this._draggedDrawing) {
+			const trendLine = this.getDrawingBySource(this._draggedDrawing);
 			if (trendLine) {
 				this._drawingChanged.fire({
 					action: 'updated',
@@ -582,7 +593,7 @@ export class ChartModel implements IDestroyable {
 				});
 			}
 
-			this._draggedInteractible = null;
+			this._draggedDrawing = null;
 		}
 	}
 

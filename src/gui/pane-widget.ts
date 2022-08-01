@@ -15,6 +15,7 @@ import { Pane } from '../model/pane';
 import { Point } from '../model/point';
 import { TimePointIndex } from '../model/time-data';
 import { IPaneRenderer } from '../renderers/ipane-renderer';
+import { TrendLineRenderer } from '../renderers/trend-line-renderer';
 import { IPaneView } from '../views/pane/ipane-view';
 
 import { createBoundCanvas, getContext2D, Size } from './canvas-utils';
@@ -297,9 +298,9 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		if (hitTest && hitTest.object?.interactive) {
 			const object = hitTest.object as HoveredObject<InteractiveHitTestData>;
-			model.setHoveredInteractible({ source: hitTest.source, object });
+			model.setHoveredDrawing({ source: hitTest.source, object });
 		} else {
-			model.setHoveredInteractible(null);
+			model.setHoveredDrawing(null);
 		}
 		model.setHoveredSource(hitTest && { source: hitTest.source, object: hitTest.object });
 	}
@@ -312,6 +313,12 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		const x = event.localX;
 		const y = event.localY;
+
+		const model = this._model();
+
+		if (!model.isDrawing()) {
+			model.selectDrawing(model.hoveredDrawing());
+		}
 
 		if (this._clicked.hasListeners()) {
 			const currentTime = this._model().crosshairSource().appliedIndex();
@@ -514,7 +521,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const model = this.chart().model();
 		if (model.drawingMode() !== null) {
 			this._setCursor(CursorType.Crosshair);
-		} else if (model.hoveredInteractible()) {
+		} else if (model.hoveredDrawing()) {
 			this._setCursor(CursorType.Pointer);
 		} else {
 			this._setCursor(CursorType.Default);
@@ -615,14 +622,50 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const height = state.height();
 		const width = state.width();
 		const hoveredSource = state.model().hoveredSource();
-		const isHovered = hoveredSource !== null && hoveredSource.source === source;
-		const objecId = hoveredSource !== null && isHovered && hoveredSource.object !== undefined ? hoveredSource.object.hitTestData : undefined;
+		const selectedSource = state.model().selectedDrawing();
+
+		const isSourceHovered = hoveredSource !== null && hoveredSource.source === source;
+		const isSourceSelected = selectedSource !== null && selectedSource.source === source;
+		const hitTestData =
+			hoveredSource !== null && isSourceHovered && hoveredSource.object !== undefined ? hoveredSource.object.hitTestData : undefined;
 
 		for (const paneView of paneViews) {
 			const renderer = paneView.renderer(height, width);
+
 			if (renderer !== null) {
 				ctx.save();
-				drawFn(renderer, ctx, pixelRatio, isHovered, objecId);
+
+				if (renderer instanceof TrendLineRenderer) {
+					const id = renderer.internalId();
+					let isHovered = false;
+					let isSelected = false;
+
+					if (isSourceSelected) {
+						const selectedData = selectedSource.object?.hitTestData as InteractiveHitTestData;
+						const patchedSelectedData: InteractiveHitTestData = { ...selectedData, selected: true };
+						isSelected = selectedData.internalId === id;
+
+						if (isSelected) {
+							drawFn(renderer, ctx, pixelRatio, false, patchedSelectedData);
+						}
+					}
+
+					if (isSourceHovered && !isSelected) {
+						const hoveredData = hoveredSource.object?.hitTestData as InteractiveHitTestData;
+						isHovered = hoveredData.internalId === id;
+
+						if (isHovered) {
+							drawFn(renderer, ctx, pixelRatio, true, hoveredData);
+						}
+					}
+
+					if (!isSelected && !isHovered) {
+						drawFn(renderer, ctx, pixelRatio, false, null);
+					}
+				} else {
+					drawFn(renderer, ctx, pixelRatio, isSourceHovered, hitTestData);
+				}
+
 				ctx.restore();
 			}
 		}
@@ -827,8 +870,8 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			return;
 		}
 
-		if (!model.isDragging() && model.hoveredInteractible()) {
-			if (model.hoveredInteractible()?.object.hitTestData?.isDragHandle) {
+		if (!model.isDragging() && model.hoveredDrawing()) {
+			if (model.hoveredDrawing()?.object.hitTestData?.isDragHandle) {
 				model.startDraggingObject();
 			}
 		}

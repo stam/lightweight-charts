@@ -24,8 +24,6 @@ export interface TrendLineRendererData {
 	externalId?: string;
 }
 
-const DRAG_HANDLE_SIZE = 20;
-
 export class TrendLineRenderer implements IPaneRenderer {
 	private _data: TrendLineRendererData | null = null;
 
@@ -33,7 +31,11 @@ export class TrendLineRenderer implements IPaneRenderer {
 		this._data = data;
 	}
 
-	public draw(ctx: CanvasRenderingContext2D, pixelRatio: number, isSourceHovered: boolean, hitTestData?: any): void {
+	public internalId() {
+		return this._data?.internalId;
+	}
+
+	public draw(ctx: CanvasRenderingContext2D, pixelRatio: number, isHovered: boolean, hitTestData?: any): void {
 		if (this._data === null) {
 			return;
 		}
@@ -42,12 +44,10 @@ export class TrendLineRenderer implements IPaneRenderer {
 			return;
 		}
 
-		let isHovered = false;
+		let isSelected = false;
 		if (hitTestData) {
 			const interactiveHitTestData = hitTestData as InteractiveHitTestData;
-			if (interactiveHitTestData.isDragHandle !== undefined && interactiveHitTestData.internalId === this._data.internalId) {
-				isHovered = true;
-			}
+			isSelected = interactiveHitTestData.selected;
 		}
 
 		const xStart = Math.round(this._data.xStart * pixelRatio);
@@ -61,9 +61,13 @@ export class TrendLineRenderer implements IPaneRenderer {
 		setLineStyle(ctx, this._data.lineStyle);
 		drawDiagonalLine(ctx, xStart, xEnd, yStart, yEnd);
 
-		if (isHovered) {
-			drawDragHandle(ctx, this._data.xStart, this._data.yStart, DRAG_HANDLE_SIZE);
-			drawDragHandle(ctx, this._data.xEnd, this._data.yEnd, DRAG_HANDLE_SIZE);
+		if (isSelected) {
+			console.log('SLDKFJSLKFJSDFLKJWFLKJWF');
+			drawDragHandle(ctx, this._data.xStart, this._data.yStart, true);
+			drawDragHandle(ctx, this._data.xEnd, this._data.yEnd, true);
+		} else if (isHovered) {
+			drawDragHandle(ctx, this._data.xStart, this._data.yStart, false);
+			drawDragHandle(ctx, this._data.xEnd, this._data.yEnd, false);
 		}
 	}
 
@@ -74,6 +78,7 @@ export class TrendLineRenderer implements IPaneRenderer {
 
 		const hitTestResponse: InteractiveHitTestData = {
 			isDragHandle: false,
+			selected: false,
 			internalId: this._data.internalId,
 		};
 		const response = {
