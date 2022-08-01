@@ -440,7 +440,12 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public selectDrawing(source: Drawing | null): void {
+		const changed = source !== this._selectedDrawing;
 		this._selectedDrawing = source;
+
+		if (changed) {
+			this.lightUpdate();
+		}
 	}
 
 	public setHoveredDrawing(object: Drawing | null): void {
