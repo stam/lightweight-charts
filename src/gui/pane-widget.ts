@@ -105,7 +105,6 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	private _initCrosshairPosition: Point | null = null;
 	private _scrollXAnimation: KineticAnimation | null = null;
 	private _isSettingSize: boolean = false;
-	private _hoveredInteractiveObject: HoveredObject | null = null;
 
 	public constructor(chart: ChartWidget, state: Pane) {
 		this._chart = chart;
@@ -264,13 +263,8 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		if (model.isDrawing()) {
 			model.completeDrawing();
-			this._hoveredInteractiveObject = null;
 		} else if (model.drawingMode() === 'trendLine') {
-			const source = model.startDrawingTrendLine(event.localX, event.localY);
-
-			if (source?.object) {
-				this._hoveredInteractiveObject = source.object;
-			}
+			model.startDrawingTrendLine(event.localX, event.localY);
 		}
 
 		this._mouseTouchDownEvent();
@@ -302,9 +296,10 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const hitTest = this.hitTest(x, y);
 
 		if (hitTest && hitTest.object?.interactive) {
-			this._hoveredInteractiveObject = hitTest.object;
+			const object = hitTest.object as HoveredObject<InteractiveHitTestData>;
+			model.setHoveredInteractible({ source: hitTest.source, object });
 		} else {
-			this._hoveredInteractiveObject = null;
+			model.setHoveredInteractible(null);
 		}
 		model.setHoveredSource(hitTest && { source: hitTest.source, object: hitTest.object });
 	}
@@ -516,9 +511,10 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			this._rightPriceAxisWidget.paint(type);
 		}
 
-		if (this.chart().model().drawingMode() !== null) {
+		const model = this.chart().model();
+		if (model.drawingMode() !== null) {
 			this._setCursor(CursorType.Crosshair);
-		} else if (this._hoveredInteractiveObject) {
+		} else if (model.hoveredInteractible()) {
 			this._setCursor(CursorType.Pointer);
 		} else {
 			this._setCursor(CursorType.Default);
@@ -831,9 +827,8 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			return;
 		}
 
-		if (!model.isDragging() && this._hoveredInteractiveObject?.interactive) {
-			const hoveredObject = this._hoveredInteractiveObject as HoveredObject<InteractiveHitTestData>;
-			if (hoveredObject.hitTestData?.isDragHandle) {
+		if (!model.isDragging() && model.hoveredInteractible()) {
+			if (model.hoveredInteractible()?.object.hitTestData?.isDragHandle) {
 				model.startDraggingObject();
 			}
 		}

@@ -160,8 +160,6 @@ export interface InteractiveSource extends HoveredSource {
 	object: HoveredObject<InteractiveHitTestData>;
 }
 
-export interface DraggingSource extends HoveredSource {}
-
 export interface PriceScaleOnPane {
 	priceScale: PriceScale;
 	pane: Pane;
@@ -355,7 +353,8 @@ export class ChartModel implements IDestroyable {
 	private _width: number = 0;
 	private _initialTimeScrollPos: number | null = null;
 	private _hoveredSource: HoveredSource | null = null;
-	private _draggingSource: DraggingSource | null = null;
+	private _hoveredInteractible: InteractiveSource | null = null;
+	private _draggedInteractible: InteractiveSource | null = null;
 	private _drawingSource: InteractiveSource | null = null;
 	private _drawingMode: DrawingMode = null;
 	private readonly _drawingModeChanged: Delegate<DrawingMode> = new Delegate();
@@ -418,6 +417,10 @@ export class ChartModel implements IDestroyable {
 		return this._hoveredSource;
 	}
 
+	public hoveredInteractible(): InteractiveSource | null {
+		return this._hoveredInteractible;
+	}
+
 	public setHoveredSource(source: HoveredSource | null): void {
 		const prevSource = this._hoveredSource;
 		this._hoveredSource = source;
@@ -430,16 +433,18 @@ export class ChartModel implements IDestroyable {
 		}
 	}
 
-	public draggingSource(): DraggingSource | null {
-		return this._draggingSource;
+	public setHoveredInteractible(object: InteractiveSource | null): void {
+		this._hoveredInteractible = object;
+	}
+
+	public draggedInteractible(): InteractiveSource | null {
+		return this._draggedInteractible;
 	}
 
 	public startDraggingObject() {
-		if (this._hoveredSource?.object?.interactive) {
-			const hoveredObject = this._hoveredSource.object as HoveredObject<InteractiveHitTestData>;
-
-			if (hoveredObject.hitTestData?.isDragHandle) {
-				this._draggingSource = this._hoveredSource;
+		if (this._hoveredInteractible) {
+			if (this._hoveredInteractible.object.hitTestData?.isDragHandle) {
+				this._draggedInteractible = this._hoveredInteractible;
 			}
 		}
 	}
@@ -477,7 +482,7 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public isDragging(): boolean {
-		return !!this._draggingSource;
+		return !!this._draggedInteractible;
 	}
 
 	public isDrawing(): boolean {
@@ -485,17 +490,17 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public dragObjectTo(x: number, y: number) {
-		if (!this._draggingSource || !(this._draggingSource.source instanceof Series)) {
+		if (!this._draggedInteractible || !(this._draggedInteractible.source instanceof Series)) {
 			return;
 		}
 
-		const dragObject = this._draggingSource.object as HoveredObject<InteractiveHitTestData>;
+		const dragObject = this._draggedInteractible.object as HoveredObject<InteractiveHitTestData>;
 
 		if (!dragObject.hitTestData?.isDragHandle) {
 			return;
 		}
 
-		this._draggingSource.source.changeTrendLine(dragObject.hitTestData.internalId, x, y, dragObject.hitTestData?.isDragHandle);
+		this._draggedInteractible.source.changeTrendLine(dragObject.hitTestData.internalId, x, y, dragObject.hitTestData?.isDragHandle);
 	}
 
 	public updateDrawing(x: number, y: number) {
@@ -567,8 +572,8 @@ export class ChartModel implements IDestroyable {
 	}
 
 	public stopDraggingObject() {
-		if (this._draggingSource) {
-			const trendLine = this.getDrawingBySource(this._draggingSource);
+		if (this._draggedInteractible) {
+			const trendLine = this.getDrawingBySource(this._draggedInteractible);
 			if (trendLine) {
 				this._drawingChanged.fire({
 					action: 'updated',
@@ -577,7 +582,7 @@ export class ChartModel implements IDestroyable {
 				});
 			}
 
-			this._draggingSource = null;
+			this._draggedInteractible = null;
 		}
 	}
 
