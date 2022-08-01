@@ -259,6 +259,20 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 	public mouseDownEvent(event: MouseEventHandlerMouseEvent): void {
 		this._onMouseEvent();
+
+		const model = this._model();
+
+		if (model.isDrawing()) {
+			model.completeDrawing();
+			this._hoveredInteractiveObject = null;
+		} else if (model.drawingMode() === 'trendLine') {
+			const source = model.startDrawingTrendLine(event.localX, event.localY);
+
+			if (source?.object) {
+				this._hoveredInteractiveObject = source.object;
+			}
+		}
+
 		this._mouseTouchDownEvent();
 		this._setCrosshairPosition(event.localX, event.localY);
 	}
@@ -303,19 +317,6 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		const x = event.localX;
 		const y = event.localY;
-
-		const model = this._model();
-
-		if (model.isDrawing()) {
-			model.completeDrawing();
-			this._hoveredInteractiveObject = null;
-		} else if (model.drawingMode() === 'trendLine') {
-			const source = model.startDrawingTrendLine(event.localX, event.localY);
-
-			if (source?.object) {
-				this._hoveredInteractiveObject = source.object;
-			}
-		}
 
 		if (this._clicked.hasListeners()) {
 			const currentTime = this._model().crosshairSource().appliedIndex();
