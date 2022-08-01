@@ -492,7 +492,7 @@ export class ChartModel implements IDestroyable {
 		};
 
 		this._drawingSource = drawingSource;
-		this.setHoveredSource(drawingSource);
+		this.setHoveredDrawing(drawingSource);
 
 		return drawingSource;
 	}

@@ -264,8 +264,11 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		if (model.isDrawing()) {
 			model.completeDrawing();
-		} else if (model.drawingMode() === 'trendLine') {
-			model.startDrawingTrendLine(event.localX, event.localY);
+		} else {
+			if (model.drawingMode() === 'trendLine') {
+				model.startDrawingTrendLine(event.localX, event.localY);
+			}
+			model.selectDrawing(model.hoveredDrawing());
 		}
 
 		this._mouseTouchDownEvent();
@@ -313,12 +316,6 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 		const x = event.localX;
 		const y = event.localY;
-
-		const model = this._model();
-
-		if (!model.isDrawing()) {
-			model.selectDrawing(model.hoveredDrawing());
-		}
 
 		if (this._clicked.hasListeners()) {
 			const currentTime = this._model().crosshairSource().appliedIndex();

@@ -62,7 +62,6 @@ export class TrendLineRenderer implements IPaneRenderer {
 		drawDiagonalLine(ctx, xStart, xEnd, yStart, yEnd);
 
 		if (isSelected) {
-			console.log('SLDKFJSLKFJSDFLKJWFLKJWF');
 			drawDragHandle(ctx, this._data.xStart, this._data.yStart, true);
 			drawDragHandle(ctx, this._data.xEnd, this._data.yEnd, true);
 		} else if (isHovered) {
