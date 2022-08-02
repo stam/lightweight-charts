@@ -43,6 +43,6 @@ export class TrendLine implements ITrendLine {
 	}
 
 	public delete() {
-		console.log('todo: delete');
+		this.trendLine().delete();
 	}
 }

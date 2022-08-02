@@ -71,6 +71,10 @@ export class CustomTrendLine {
 	// 	return this._priceAxisView;
 	// }
 
+	public delete() {
+		return this._series.removeTrendLine(this);
+	}
+
 	public update(): void {
 		this._trendLineView.update();
 		// this._priceAxisView.update();

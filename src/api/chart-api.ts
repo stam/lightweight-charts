@@ -196,8 +196,6 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		});
 		model.drawingChanged().subscribe((event) => {
 			if (this._drawingChangedDelegate.hasListeners()) {
-				const t = event.target ? new TrendLine(event.target) : null;
-
 				const externalEvent: ExternalDrawingEvent = {
 					...event,
 					target: event.target ? new TrendLine(event.target) : null,
