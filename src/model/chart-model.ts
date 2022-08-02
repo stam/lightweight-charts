@@ -12,6 +12,7 @@ import { PriceAxisRendererOptionsProvider } from '../renderers/price-axis-render
 
 import { Coordinate } from './coordinate';
 import { Crosshair, CrosshairOptions } from './crosshair';
+import { CustomTrendLine } from './custom-trend-line';
 import { DefaultPriceScaleId, isDefaultPriceScale } from './default-price-scale';
 import { GridOptions } from './grid';
 import { InvalidateMask, InvalidationLevel } from './invalidate-mask';
@@ -26,7 +27,6 @@ import { Series, SeriesOptionsInternal } from './series';
 import { SeriesOptionsMap, SeriesType } from './series-options';
 import { LogicalRange, TimePointIndex, TimeScalePoint } from './time-data';
 import { TimeScale, TimeScaleOptions } from './time-scale';
-import { TrendLineOptions } from './trend-line-options';
 import { Watermark, WatermarkOptions } from './watermark';
 
 /**
@@ -330,11 +330,11 @@ interface GradientColorsCache {
 }
 
 export type DrawingMode = null | 'trendLine';
-export type DrawingAction = 'created' | 'updated' | 'deleted';
+export type DrawingAction = 'created' | 'updated' | 'selected';
 export type DrawingEvent = {
 	action: DrawingAction;
 	type: 'trendLine';
-	options: TrendLineOptions<string>;
+	target: CustomTrendLine | null;
 };
 
 export class ChartModel implements IDestroyable {
@@ -444,6 +444,13 @@ export class ChartModel implements IDestroyable {
 		this._selectedDrawing = source;
 
 		if (changed) {
+			const trendLine = source && this.getDrawingBySource(source);
+
+			this._drawingChanged.fire({
+				action: 'selected',
+				type: 'trendLine',
+				target: trendLine || null,
+			});
 			this.lightUpdate();
 		}
 	}
@@ -540,7 +547,7 @@ export class ChartModel implements IDestroyable {
 				this._drawingChanged.fire({
 					action: 'created',
 					type: 'trendLine',
-					options: trendLine.externalOptions(),
+					target: trendLine,
 				});
 			}
 
@@ -594,7 +601,7 @@ export class ChartModel implements IDestroyable {
 				this._drawingChanged.fire({
 					action: 'updated',
 					type: 'trendLine',
-					options: trendLine.externalOptions(),
+					target: trendLine,
 				});
 			}
 

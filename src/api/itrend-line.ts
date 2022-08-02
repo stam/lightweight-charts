@@ -26,4 +26,8 @@ export interface ITrendLine {
 	 * ```
 	 */
 	applyOptions(options: Partial<TrendLineOptions<Time>>): void;
+
+	getOptions(): TrendLineOptions<string>;
+
+	delete(): void;
 }

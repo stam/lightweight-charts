@@ -1,7 +1,7 @@
 import { DeepPartial } from '../helpers/strict-type-checks';
 
 import { BarPrice, BarPrices } from '../model/bar';
-import { ChartOptions, DrawingEvent, DrawingMode } from '../model/chart-model';
+import { ChartOptions, DrawingMode } from '../model/chart-model';
 import { Point } from '../model/point';
 import { SeriesMarker } from '../model/series-markers';
 import {
@@ -14,6 +14,7 @@ import {
 	SeriesType,
 } from '../model/series-options';
 import { BusinessDay, UTCTimestamp } from '../model/time-data';
+import { ExternalDrawingEvent } from './chart-api';
 
 import { Time } from './data-consumer';
 import { IPriceScaleApi } from './iprice-scale-api';
@@ -58,7 +59,7 @@ export interface MouseEventParams {
  */
 export type MouseEventHandler = (param: MouseEventParams) => void;
 export type DrawingModeHandler = (param: DrawingMode) => void;
-export type DrawingEventHandler = (param: DrawingEvent) => void;
+export type DrawingEventHandler = (param: ExternalDrawingEvent) => void;
 
 /**
  * The main interface of a single chart.

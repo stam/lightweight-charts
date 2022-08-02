@@ -36,6 +36,7 @@ import { DrawingEventHandler, DrawingModeHandler, IChartApi, MouseEventHandler, 
 import { IPriceScaleApi } from './iprice-scale-api';
 import { ISeriesApi } from './iseries-api';
 import { ITimeScaleApi } from './itime-scale-api';
+import { ITrendLine } from './itrend-line';
 import { chartOptionsDefaults } from './options/chart-options-defaults';
 import {
 	areaStyleDefaults,
@@ -49,6 +50,7 @@ import {
 import { PriceScaleApi } from './price-scale-api';
 import { migrateOptions, SeriesApi } from './series-api';
 import { TimeScaleApi } from './time-scale-api';
+import { TrendLine } from './trend-line-api';
 
 function patchPriceFormat(priceFormat?: DeepPartial<PriceFormat>): void {
 	if (priceFormat === undefined || priceFormat.type === 'custom') {
@@ -149,6 +151,10 @@ function toInternalOptions(options: DeepPartial<ChartOptions>): DeepPartial<Char
 	return options as DeepPartial<ChartOptionsInternal>;
 }
 
+export type ExternalDrawingEvent = Omit<DrawingEvent, 'target'> & {
+	target: ITrendLine | null;
+};
+
 export type IPriceScaleApiProvider = Pick<IChartApi, 'priceScale'>;
 
 export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
@@ -159,7 +165,7 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 
 	private readonly _clickedDelegate: Delegate<MouseEventParams> = new Delegate();
 	private readonly _drawingModeDelegate: Delegate<DrawingMode> = new Delegate();
-	private readonly _drawingChangedDelegate: Delegate<DrawingEvent> = new Delegate();
+	private readonly _drawingChangedDelegate: Delegate<ExternalDrawingEvent> = new Delegate();
 	private readonly _crosshairMovedDelegate: Delegate<MouseEventParams> = new Delegate();
 
 	private readonly _timeScaleApi: TimeScaleApi;
@@ -190,7 +196,13 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		});
 		model.drawingChanged().subscribe((event) => {
 			if (this._drawingChangedDelegate.hasListeners()) {
-				this._drawingChangedDelegate.fire(event);
+				const t = event.target ? new TrendLine(event.target) : null;
+
+				const externalEvent: ExternalDrawingEvent = {
+					...event,
+					target: event.target ? new TrendLine(event.target) : null,
+				};
+				this._drawingChangedDelegate.fire(externalEvent);
 			}
 		});
 		this._timeScaleApi = new TimeScaleApi(model, this._chartWidget.timeAxisWidget());

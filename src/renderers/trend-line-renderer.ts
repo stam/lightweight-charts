@@ -31,6 +31,10 @@ export class TrendLineRenderer implements IPaneRenderer {
 		this._data = data;
 	}
 
+	public data() {
+		return this._data;
+	}
+
 	public internalId() {
 		return this._data?.internalId;
 	}
@@ -71,27 +75,28 @@ export class TrendLineRenderer implements IPaneRenderer {
 	}
 
 	public hitTest(x: Coordinate, y: Coordinate): HoveredObject | null {
-		if (this._data === null) {
+		const data = this.data();
+		if (data === null) {
 			return null;
 		}
 
 		const hitTestResponse: InteractiveHitTestData = {
 			isDragHandle: false,
 			selected: false,
-			internalId: this._data.internalId,
+			internalId: data.internalId,
 		};
 		const response = {
 			hitTestData: hitTestResponse,
-			externalId: this._data.externalId,
+			externalId: data.externalId,
 			interactive: true,
 		};
 
 		// Drag handles
-		if (hitTestCircle(this._data.xStart, this._data.yStart, 20, x, y)) {
+		if (hitTestCircle(data.xStart, data.yStart, 20, x, y)) {
 			response.hitTestData.isDragHandle = 'start';
 			return response;
 		}
-		if (hitTestCircle(this._data.xEnd, this._data.yEnd, 20, x, y)) {
+		if (hitTestCircle(data.xEnd, data.yEnd, 20, x, y)) {
 			response.hitTestData.isDragHandle = 'end';
 			return response;
 		}
@@ -99,21 +104,21 @@ export class TrendLineRenderer implements IPaneRenderer {
 		const nonRetardedSortFunction = (a: number, b: number) => a - b;
 
 		// Start and end don't necessarily mean min and max
-		const xRange = [this._data.xStart, this._data.xEnd].sort(nonRetardedSortFunction);
-		const yRange = [this._data.yStart, this._data.yEnd].sort(nonRetardedSortFunction);
+		const xRange = [data.xStart, data.xEnd].sort(nonRetardedSortFunction);
+		const yRange = [data.yStart, data.yEnd].sort(nonRetardedSortFunction);
 
 		// Check within massive hitbox
 		if (x < xRange[0] || x > xRange[1] || y < yRange[0] || y > yRange[1]) {
 			return null;
 		}
 
-		const slope = (this._data.yEnd - this._data.yStart) / (this._data.xEnd - this._data.xStart);
-		const localX = x - this._data.xStart;
-		const localY = y - this._data.yStart;
+		const slope = (data.yEnd - data.yStart) / (data.xEnd - data.xStart);
+		const localX = x - data.xStart;
+		const localY = y - data.yStart;
 		const targetY = slope * localX;
 
 		const HIT_RADIUS = 5;
-		const targetYWithinBounds = Math.abs(localY - targetY) < HIT_RADIUS + this._data.lineWidth;
+		const targetYWithinBounds = Math.abs(localY - targetY) < HIT_RADIUS + data.lineWidth;
 
 		if (targetYWithinBounds) {
 			return response;

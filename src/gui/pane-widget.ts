@@ -618,7 +618,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		const paneViews = paneViewsGetter(source, state);
 		const height = state.height();
 		const width = state.width();
-		const hoveredSource = state.model().hoveredSource();
+		const hoveredSource = state.model().hoveredDrawing();
 		const selectedSource = state.model().selectedDrawing();
 
 		const isSourceHovered = hoveredSource !== null && hoveredSource.source === source;

@@ -20,14 +20,6 @@ interface CoordinateToAndFrom {
 
 let internalIdCounter = 0;
 
-const readableDate = (t: TimePoint): string => {
-	const parsedDate = new Date(t.timestamp * 1000);
-	const userTimezoneOffset = parsedDate.getTimezoneOffset() * 60000;
-	const utcDate = new Date(parsedDate.getTime() - userTimezoneOffset);
-
-	return utcDate.toISOString().substring(0, 10);
-};
-
 export class CustomTrendLine {
 	private readonly _series: Series;
 	private readonly _trendLineView: CustomTrendLinePaneView;
@@ -66,11 +58,6 @@ export class CustomTrendLine {
 
 	public id(): number {
 		return this._options.id === undefined ? -1 : this._options.id;
-	}
-
-	public externalOptions(): TrendLineOptions<string> {
-		const options = this.options();
-		return { ...options, startTime: readableDate(options.startTime), endTime: readableDate(options.endTime) };
 	}
 
 	public paneViews(): readonly IPaneView[] {

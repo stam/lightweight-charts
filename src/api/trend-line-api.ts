@@ -6,6 +6,14 @@ import { Time } from './data-consumer';
 import { convertTime } from './data-layer';
 import { ITrendLine } from './itrend-line';
 
+const readableDate = (t: TimePoint): string => {
+	const parsedDate = new Date(t.timestamp * 1000);
+	const userTimezoneOffset = parsedDate.getTimezoneOffset() * 60000;
+	const utcDate = new Date(parsedDate.getTime() - userTimezoneOffset);
+
+	return utcDate.toISOString().substring(0, 10);
+};
+
 export class TrendLine implements ITrendLine {
 	private readonly _trendLine: CustomTrendLine;
 
@@ -27,5 +35,14 @@ export class TrendLine implements ITrendLine {
 
 	public trendLine(): CustomTrendLine {
 		return this._trendLine;
+	}
+
+	public getOptions() {
+		const options = this.trendLine().options();
+		return { ...options, startTime: readableDate(options.startTime), endTime: readableDate(options.endTime) };
+	}
+
+	public delete() {
+		console.log('todo: delete');
 	}
 }
